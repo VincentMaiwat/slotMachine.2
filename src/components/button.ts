@@ -1,50 +1,165 @@
 import {
-    // Application,
-    // Assets,
-    // BlurFilter,
-    // Color,
-    // FillGradient,
-    // Sprite,
-    // TextStyle,
-    // Texture,
-    // TilingSprite,
-    Graphics,
-    Text,
+    Application,
+    Sprite,
+    Texture,
     Container,
+    Assets,
+    TickerCallback
 } from 'pixi.js';
 
-export class Button extends Container {
-    private background: Graphics;
-    private labelBtn: Text;
+export class Button {
+    private app: Application;
+    private sprite?: Sprite;
+    private texture?: Texture;
+    private imagePath: string = 'assets/images/spin.png';
+    private altImagePath: string = 'assets/images/gl.png';
+    private container: Container;
+    private tickerCallback?: TickerCallback;
+    private onClickCallback?: () => void;
 
-    constructor(text: string, x:number, y:number){
-        super();
+    private width: number = 100;
+    private height: number = 60;
+    private xPosition: number = 0;
+    private yPosition: number = 780;
+    private isInteractive: boolean = true;
+    private isPulsing: boolean = true;
 
-        this.background = new Graphics;
-        this.background.fill(0x3498db);
-        this.background.drawRoundedRect(0,0,150,50,10);
-        this.background.endFill();
-        this.addChild(this.background);
+    constructor(app: Application) {
+        this.app = app;
+        this.container = new Container();
+        this.app.stage.addChild(this.container);
 
-        this.labelBtn = new Text(text, {
-            fontSize:20,
-            fill: 0xffffff,
-            align:"center",
-        });
-
-        this.labelBtn.anchor.set(0.5);
-        this.labelBtn.x =75;
-        this.labelBtn.y =25;
-        this.addChild(this.labelBtn);
-
-        this.x = x;
-        this.y = y;
-
-        this.interactive = true;
-        this.on("pointerdown", this.onClick);
+        window.addEventListener('resize', this.handleResize.bind(this));
     }
 
-    private onClick = () => {
-        console.log("button clicked!");
+    private handleResize(): void {
+        if (this.sprite) {
+            this.sprite.x = this.xPosition || this.app.screen.width / 2;
+        }
+    }
+
+    static async create(app: Application): Promise<Button> {
+        const button = new Button(app);
+        await button.initialize();
+        return button;
+    }
+
+    async initialize(): Promise<void> {
+        try {
+            this.texture = await Assets.load(this.imagePath);
+            this.sprite = Sprite.from(this.texture);
+            this.applyConfigurations();
+            this.container.addChild(this.sprite);
+            return Promise.resolve();
+        } catch (error) {
+            console.error("Failed to load logo:", error);
+            return Promise.reject(error);
+        }
+    }
+
+    private applyConfigurations(): void {
+        if (!this.sprite) return;
+
+        this.sprite.width = this.width;
+        this.sprite.height = this.height;
+        this.sprite.anchor.set(0.5);
+
+        this.sprite.x = (this.xPosition || this.app.screen.width) / 2;
+        this.sprite.y = (this.yPosition || this.app.screen.height );
+
+        // Set interactivity
+        if (this.isInteractive) {
+            this.sprite.eventMode = 'static';
+            this.sprite.cursor = 'pointer';
+            this.sprite.on('pointerdown', this.onClick.bind(this));
+        } else {
+            this.sprite.eventMode = 'none';
+            this.sprite.cursor = 'default';
+        }
+        // Set blinking animation if pulsing is enabled
+        if (this.isPulsing) {
+            this.setupPulsingEffect();
+        }
+    }
+
+    private setupPulsingEffect(): void {
+        let blinkSpeed = 0.01;
+        let increasing = false;
+
+        // Remove any existing ticker callback
+        if (this.tickerCallback) {
+            this.app.ticker.remove(this.tickerCallback);
+        }
+
+        // Create and store the new ticker callback
+        this.tickerCallback = (delta: number) => {
+            if (!this.sprite) return;
+
+            if (increasing) {
+                this.sprite.alpha += blinkSpeed;
+                if (this.sprite.alpha >= 1) increasing = false;
+            } else {
+                this.sprite.alpha -= blinkSpeed;
+                if (this.sprite.alpha <= 0.2) increasing = true;
+            }
+        };
+
+        // Add the ticker callback
+        this.app.ticker.add(this.tickerCallback);
+    }
+
+    // Method to set click callback
+    public setClickCallback(callback: () => void): void {
+        this.onClickCallback = callback;
+    }
+
+    private onClick = async () => {
+        if (this.onClickCallback) {
+            this.onClickCallback();
+        }
+        // Change interactivity
+        this.isInteractive = false;
+
+        this.isPulsing = false;
+        if (this.tickerCallback) {
+            this.app.ticker.remove(this.tickerCallback);
+            this.tickerCallback = undefined;
+        }
+        if (this.sprite) {
+            this.sprite.alpha = 1;
+        }
+        // Change image to good luck
+        try {
+            const newTexture = await Assets.load(this.altImagePath);
+            if (this.sprite) {
+                this.sprite.texture = newTexture;
+                this.sprite.width = this.sprite.width = 190;
+                this.sprite.height = this.sprite.height = 70;
+
+                // Update interactivity settings
+                this.sprite.eventMode = 'none';
+                this.sprite.cursor = 'default';
+            }
+        } catch (error) {
+            console.error("Failed to load alternative button image:", error);
+        }
+    };
+
+    // Method to reset button to initial state
+    public reset = async (): Promise<void> => {
+        this.isInteractive = true;
+        this.isPulsing = true;
+
+        try {
+            // Load original image
+            const originalTexture = await Assets.load(this.imagePath);
+
+            if (this.sprite) {
+                this.sprite.texture = originalTexture;
+                this.applyConfigurations();
+            }
+        } catch (error) {
+            console.error("Failed to reset button:", error);
+        }
     };
 }

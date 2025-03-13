@@ -1,4 +1,3 @@
-// logo.ts
 import { Application, Assets, Container, Sprite, Texture } from 'pixi.js';
 import { Component } from '../utils/resize';
 
@@ -9,7 +8,7 @@ export class Logo {
   private logoPath: string = 'assets/images/SLOT.png';
   private container: Container;
 
-   // Configuration properties with defaults
+   // Default properties
    private width: number = 400;
    private height: number = 280;
    private xPosition: number = 0;
@@ -28,12 +27,10 @@ export class Logo {
   // Handle window resize
   private handleResize(): void {
     if (this.sprite) {
-      // Default behavior: center horizontally, maintain vertical position
       this.sprite.x = this.xPosition || this.app.screen.width / 2;
     }
   }
 
-  // Static factory method for easier creation and initialization
   static async create(app: Application): Promise<Logo> {
     const logo = new Logo(app);
     await logo.initialize();
@@ -43,14 +40,11 @@ export class Logo {
   // Initialize the logo with all customizations
   async initialize(): Promise<void> {
     try {
-      // Load texture
       this.logoTexture = await Assets.load(this.logoPath);
       this.sprite = Sprite.from(this.logoTexture);
 
-      // Apply all configurations
+      // Apply all configurations and add to container
       this.applyConfigurations();
-
-      // Add to stage
       this.container.addChild(this.sprite);
 
       return Promise.resolve();
@@ -62,20 +56,13 @@ export class Logo {
 
   // Apply all configurations to the sprite
   private applyConfigurations(): void {
-    if (!this.sprite) return;
-
-    // Set size
+    if (!this.sprite) return; // Check if there is sprite loaded
     this.sprite.width = this.width;
     this.sprite.height = this.height;
-
-    // Set anchor to center
     this.sprite.anchor.set(0.5);
-
     // Set position (default to center if not specified)
     this.sprite.x = this.xPosition || this.app.screen.width / 2;
     this.sprite.y = this.yPosition || 100;
-
-    // Set alpha
     this.sprite.alpha = this.alpha;
   }
 

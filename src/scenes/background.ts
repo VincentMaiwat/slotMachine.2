@@ -1,4 +1,3 @@
-// background.ts
 import { Application, Assets, Container, Sprite, TilingSprite, Texture } from 'pixi.js';
 
 export interface BackgroundLayerConfig {
