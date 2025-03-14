@@ -60,7 +60,7 @@ export class Button {
     private applyConfigurations(): void {
         if (!this.sprite) return;
 
-        this.sprite.width = this.width;
+        // this.sprite.width = this.width;
         this.sprite.height = this.height;
         this.sprite.anchor.set(0.5);
 
