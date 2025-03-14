@@ -1,27 +1,33 @@
-// import {Assets, Texture} from "pixi.js";
+// assets.ts
+import { Assets } from 'pixi.js';
 
-// export const assetManifest = {
-//     bundles: [
-//         {
-//             name:"button",
-//             assets: {
-//                 spin: "assets/images/spin.png",
-//                 gl: "assets/images/gl.png",
-//             },
-//         },
-//     ],
-// };
+// Define your asset manifest
+export const assetManifest = {
+  bundles: [
+    {
+      name: 'images',
+      assets: [
+        {
+          name: 'cyndaquil',
+          srcs: './assets/images/cyndaquil.png'
+        }
+      ]
+    }
+  ]
+};
 
-// export async function loadAssets(): Promise<void> {
-//     await Assets.init({manifest: assetManifest});
-//     await Assets.loadBundle("button");
-//     await loadAssets();
-// }
+// Initialize assets
+export async function initializeAssets() {
+  // Add the manifest to the asset resolver
+  await Assets.init({ manifest: assetManifest });
 
-// export function getTexture(name:string): Texture{
-//     const texture = Assets.get(name);
-//     if (!texture){
-//         throw new Error('Texture  "&{name}" not found!');
-//     }
-//     return Texture;
-// }
+  // Preload the basic bundle
+  await Assets.loadBundle('game-assets');
+
+  console.log('All assets loaded!');
+}
+
+// Helper to get a specific asset
+export function getAsset(name: string) {
+  return Assets.get(name);
+}

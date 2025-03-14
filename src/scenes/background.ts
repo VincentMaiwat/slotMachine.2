@@ -50,7 +50,7 @@ export class BackgroundSettings {
 
     // Set up window resize handler
     window.addEventListener('resize', () => {
-      this.resize(this.app.screen.width, this.app.screen.height);
+      this.resize(window.innerWidth, window.innerHeight);
     });
   }
 

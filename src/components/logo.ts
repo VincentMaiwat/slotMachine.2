@@ -1,5 +1,5 @@
 import { Application, Assets, Container, Sprite, Texture } from 'pixi.js';
-import { Component } from '../utils/resize';
+// import { Component } from '../utils/resize';
 
 export class Logo {
   private app: Application;
