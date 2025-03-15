@@ -11,9 +11,6 @@ export class Logo {
    // Default properties
    private width: number = 400;
    private height: number = 280;
-   private xPosition: number = 0;
-   private yPosition: number = 130;
-   private alpha: number = 1;
 
   constructor(app: Application) {
     this.app = app;
@@ -26,8 +23,12 @@ export class Logo {
 
   // Handle window resize
   private handleResize(): void {
-    if (this.sprite) {
-      this.sprite.x = this.xPosition || this.app.screen.width / 2;
+    if (this.container) {
+      this.container.position.set((window.innerWidth)/2,(window.innerHeight)/7);
+      // this.sprite.y = (window.innerHeight - this.sprite.height)/2;
+      // this.sprite.x = (window.innerWidth - this.sprite.width)/2;
+      // this.container.x = this.xPosition || this.app.screen.width / 2;
+      // this.container.y = this.yPosition || this.app.screen.height / 2;
     }
   }
 
@@ -59,11 +60,9 @@ export class Logo {
     if (!this.sprite) return; // Check if there is sprite loaded
     this.sprite.width = this.width;
     this.sprite.height = this.height;
-    this.sprite.anchor.set(0.5);
+    this.sprite.anchor.set(0.5,0.5);
     // Set position (default to center if not specified)
-    this.sprite.x = this.xPosition || this.app.screen.width / 2;
-    this.sprite.y = this.yPosition || 100;
-    this.sprite.alpha = this.alpha;
-  }
+    this.container.position.set((window.innerWidth - this.container.width)/2,(window.innerHeight - this.container.height)/7);
+   }
 
 }

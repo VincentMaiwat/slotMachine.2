@@ -29,6 +29,9 @@ export class Reels {
     private isRunning: boolean = false;
     private tweening: any[] = [];
 
+    private mask?: Graphics;
+
+
     constructor(app: Application, numberOfReels: number = 5, symbolsPerReel: number = 3) {
         this.app = app;
         this.numberOfReels = numberOfReels;
@@ -48,11 +51,14 @@ export class Reels {
         // Setup animation ticker
         this.setupTicker();
     }
-
     private setupContainerGrid(): void {
-        // Create background rectangle
+        // Use consistent approach for container size
+        const containerWidth = 900;
+        const containerHeight = 500;
+
+        // Create background rectangle with consistent size
         const rectangle = new Graphics()
-            .roundRect(0, 0, 900, 500)
+            .roundRect(0, 0, containerWidth, containerHeight)
             .fill({
                 color: '#ffffff',
                 alpha: 0.4
@@ -60,21 +66,90 @@ export class Reels {
 
         this.containerGrid.addChild(rectangle);
 
-        // Position the container
+        // Add container to stage first
         this.app.stage.addChild(this.containerGrid);
-        this.containerGrid.y = (this.app.screen.height - 500) / 2; // Using actual height
-        this.containerGrid.x = (this.app.screen.width - 900) / 2;  // Using actual width
 
-        // Create mask to prevent symbols from going out of bounds
-        const mask = new Graphics()
-            .roundRect(0, 0, 1450, 710)
+        // Create mask with the same dimensions as the container
+        this.mask = new Graphics()
+            .roundRect(0, 0, containerWidth, containerHeight)
             .fill({
                 color: '#ffffff',
                 alpha: 0.4
             });
 
-        this.containerGrid.mask = mask;
+        // Add mask to stage
+        this.app.stage.addChild(this.mask);
+
+        // Apply mask to container
+        this.containerGrid.mask = this.mask;
+
+        // Position everything using window dimensions - more responsive
+        this.handleResize();
     }
+
+    private handleResize(): void {
+        if (!this.containerGrid || !this.mask) return;
+
+        // Get explicit rectangle dimensions rather than relying on container.width
+        const containerWidth = 900;  // Use the fixed width you defined for your rectangle
+        const containerHeight = 500; // Use the fixed height you defined for your rectangle
+
+        // Precisely center both horizontally and vertically
+        this.containerGrid.x = Math.round((window.innerWidth - containerWidth) / 2);
+        this.containerGrid.y = Math.round((window.innerHeight - containerHeight) / 2);
+
+        // Ensure mask is positioned exactly the same
+        this.mask.x = this.containerGrid.x;
+        this.mask.y = this.containerGrid.y;
+
+        // For debugging - you can log the positions
+        console.log('Window width:', window.innerWidth);
+        console.log('Container width:', containerWidth);
+        console.log('X position:', this.containerGrid.x);
+    }
+
+    // private handleResize(): void {
+    //     if (this.containerGrid) {
+    //         this.containerGrid.y = (window.innerHeight - this.containerGrid.height)/2; // Using actual height
+    //         this.containerGrid.x = (window.innerWidth - this.containerGrid.width)/2;  // Using actual width
+    //         // this.containerGrid.width = (window.innerWidth - this.containerGrid.width);
+    //     }
+    //     if (this.mask) {
+    //         this.mask.x = this.containerGrid.x;
+    //         this.mask.y = this.containerGrid.y;
+    //     }
+    // }
+
+    // private setupContainerGrid(): void {
+    //     // Create background rectangle
+    //     const rectangle = new Graphics()
+    //         .roundRect(0, 0, window.innerWidth/2.14, window.innerHeight/1.84)
+    //         .fill({
+    //             color: '#ffffff',
+    //             alpha: 0.4
+    //         });
+
+    //     this.containerGrid.addChild(rectangle);
+
+    //     // Position the container
+    //     this.app.stage.addChild(this.containerGrid);
+    //     this.containerGrid.y = (this.app.screen.height - 500) / 2; // Using actual height
+    //     this.containerGrid.x = (this.app.screen.width - 900) / 2;  // Using actual width
+
+    //     // this.containerGrid.y = (window.innerHeight - this.containerGrid.height)/2; // Using actual height
+    //     // this.containerGrid.x = (window.innerWidth - this.containerGrid.width)/2;  // Using actual width
+
+    //     // Create mask to prevent symbols from going out of bounds
+    //     this.mask = new Graphics()
+    //         .roundRect(0, 0,1450, 710)
+    //         .fill({
+    //             color: '#ffffff',
+    //             alpha: 0.4
+    //         });
+
+    //     this.containerGrid.mask = this.mask;
+    //     this.app.stage.addChild(this.mask);
+    // }
 
     private async loadAssets(): Promise<void> {
         // Load all textures
@@ -150,13 +225,7 @@ export class Reels {
         }
     }
 
-    private handleResize(): void {
-        if (this.containerGrid) {
-          this.containerGrid.x = (window.innerWidth - 900) / 2;
-          this.containerGrid.y = (this.containerGrid.height) / 2;
 
-        }
-    }
 
     // Method to spin the reels
     spin(): void {

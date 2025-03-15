@@ -26,13 +26,14 @@ async function main() {
   const reels = new Reels(app);
   await reels.initialize();
 
-  await Balance.create(app);
+  const manageBalance = await Balance.create(app);
 
   // Create button and connect to reels
   const button = await Button.create(app);
+
   button.setClickCallback(() => {
     reels.spin();
-
+    button.connectBalance(manageBalance);
     // Reset Button after 4 seconds
     setTimeout(() => {
       button.reset();

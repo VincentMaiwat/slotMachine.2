@@ -6,6 +6,7 @@ import {
     Assets,
     TickerCallback
 } from 'pixi.js';
+import { Balance } from './balance';
 
 export class Button {
     private app: Application;
@@ -24,6 +25,8 @@ export class Button {
     private isInteractive: boolean = true;
     private isPulsing: boolean = true;
 
+    private balanceManager?: Balance;
+
     constructor(app: Application) {
         this.app = app;
         this.container = new Container();
@@ -34,7 +37,8 @@ export class Button {
 
     private handleResize(): void {
         if (this.sprite) {
-            this.sprite.x = this.xPosition || this.app.screen.width / 2;
+            this.sprite.x = window.innerWidth/2;
+            this.sprite.y = (window.innerHeight/2) + 330;
         }
     }
 
@@ -71,6 +75,7 @@ export class Button {
         if (this.isInteractive) {
             this.sprite.eventMode = 'static';
             this.sprite.cursor = 'pointer';
+            this.sprite.removeAllListeners('pointerdown');
             this.sprite.on('pointerdown', this.onClick.bind(this));
         } else {
             this.sprite.eventMode = 'none';
@@ -107,6 +112,9 @@ export class Button {
         // Add the ticker callback
         this.app.ticker.add(this.tickerCallback);
     }
+    public connectBalance(balance: Balance): void {
+        this.balanceManager = balance;
+    }
 
     // Method to set click callback
     public setClickCallback(callback: () => void): void {
@@ -117,6 +125,11 @@ export class Button {
         if (this.onClickCallback) {
             this.onClickCallback();
         }
+
+        if (this.balanceManager) {
+            this.balanceManager.deductBalance(5);
+        }
+
         // Change interactivity
         this.isInteractive = false;
 
