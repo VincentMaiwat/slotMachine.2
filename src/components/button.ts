@@ -7,13 +7,12 @@ import {
     TickerCallback
 } from 'pixi.js';
 import { Balance } from './balance';
+import { AssetLoader } from '../utils/assetLoader';
 
 export class Button {
     private app: Application;
     private sprite?: Sprite;
     private texture?: Texture;
-    private imagePath: string = 'assets/images/spin.png';
-    private altImagePath: string = 'assets/images/gl.png';
     private container: Container;
     private tickerCallback?: TickerCallback;
     private onClickCallback?: () => void;
@@ -50,7 +49,7 @@ export class Button {
 
     async initialize(): Promise<void> {
         try {
-            this.texture = await Assets.load(this.imagePath);
+            this.texture = AssetLoader.getSpinTexture();
             this.sprite = Sprite.from(this.texture);
             this.applyConfigurations();
             this.container.addChild(this.sprite);
@@ -143,7 +142,7 @@ export class Button {
         }
         // Change image to good luck
         try {
-            const newTexture = await Assets.load(this.altImagePath);
+            const newTexture = AssetLoader.getGlTexture();
             if (this.sprite) {
                 this.sprite.texture = newTexture;
                 this.sprite.width = this.sprite.width = 190;
@@ -165,7 +164,7 @@ export class Button {
 
         try {
             // Load original image
-            const originalTexture = await Assets.load(this.imagePath);
+            const originalTexture = AssetLoader.getSpinTexture();
 
             if (this.sprite) {
                 this.sprite.texture = originalTexture;

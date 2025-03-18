@@ -1,11 +1,11 @@
 import { Application, Assets, Container, Sprite, Texture } from 'pixi.js';
-// import { Component } from '../utils/resize';
+import { AssetLoader } from '../utils/assetLoader';
+// import { asse } from '../utils/resize';
 
 export class Logo {
   private app: Application;
   private sprite?: Sprite;
   private logoTexture?: Texture;
-  private logoPath: string = 'assets/images/SLOT.png';
   private container: Container;
 
    // Default properties
@@ -25,10 +25,6 @@ export class Logo {
   private handleResize(): void {
     if (this.container) {
       this.container.position.set((window.innerWidth)/2,(window.innerHeight)/7);
-      // this.sprite.y = (window.innerHeight - this.sprite.height)/2;
-      // this.sprite.x = (window.innerWidth - this.sprite.width)/2;
-      // this.container.x = this.xPosition || this.app.screen.width / 2;
-      // this.container.y = this.yPosition || this.app.screen.height / 2;
     }
   }
 
@@ -41,7 +37,8 @@ export class Logo {
   // Initialize the logo with all customizations
   async initialize(): Promise<void> {
     try {
-      this.logoTexture = await Assets.load(this.logoPath);
+      // await AssetLoader.init(this.app);
+      this.logoTexture = AssetLoader.getLogoTexture();
       this.sprite = Sprite.from(this.logoTexture);
 
       // Apply all configurations and add to container

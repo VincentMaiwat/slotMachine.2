@@ -8,6 +8,7 @@ import {
     Sprite,
     Texture
 } from 'pixi.js';
+import { AssetLoader } from '../utils/assetLoader';
 
 // Reel propoerties
 interface Reel {
@@ -44,8 +45,9 @@ export class Reels {
 
     async initialize(): Promise<void> {
         this.setupContainerGrid();
-        await this.loadAssets();
+        // await AssetLoader.init(this.app);
 
+        this.slotTextures = AssetLoader.getTextures();
         this.createReels();
         this.app.stage.addChild(this.containerGrid);
 
@@ -109,40 +111,6 @@ export class Reels {
         console.log('X position:', this.containerGrid.x);
     }
 
-    private async loadAssets(): Promise<void> {
-        // Load all textures
-        await Assets.load([
-            'assets/images/9.png',
-            'assets/images/A.png',
-            'assets/images/J.png',
-            'assets/images/K.png',
-            'assets/images/Q.png',
-            'assets/images/10.png',
-            'assets/images/wild.png',
-            'assets/images/bonus.png',
-            'assets/images/s1.png',
-            'assets/images/s2.png',
-            'assets/images/s3.png',
-            'assets/images/s4.png'
-        ]);
-
-        // Store textures in array
-        this.slotTextures = [
-            Texture.from('assets/images/A.png'),
-            Texture.from('assets/images/9.png'),
-            Texture.from('assets/images/J.png'),
-            Texture.from('assets/images/K.png'),
-            Texture.from('assets/images/Q.png'),
-            Texture.from('assets/images/10.png'),
-            Texture.from('assets/images/wild.png'),
-            Texture.from('assets/images/bonus.png'),
-            Texture.from('assets/images/s1.png'),
-            Texture.from('assets/images/s2.png'),
-            Texture.from('assets/images/s3.png'),
-            Texture.from('assets/images/s4.png')
-        ];
-    }
-
     private createReels(): void {
         for (let i = 0; i < this.numberOfReels; i++) {
             const containerRow = new Container();
@@ -183,26 +151,24 @@ export class Reels {
         }
     }
 
-
-
     // Method to spin the reels
-    spin(): void {
+    spin(onComplete?: () => void): void {
         if (this.isRunning) return;
         this.isRunning = true;
 
         for (let i = 0; i < this.reels.length; i++) {
             const reel = this.reels[i];
-            const extra = Math.floor(Math.random() * 1);
-            const target = reel.position + 10 + i * 5 + extra;
-            const time = 1500 + i * 600 + extra * 600;
+            const target = reel.position + 10 + i * 5  ;
+            const time = 1500 + i * 600;
 
             this.tweenTo(reel, 'position', target, time, this.backout(0.5), null,
-                i === this.reels.length - 1 ? this.reelsComplete.bind(this) : null);
+                i === this.reels.length - 1 ? () => this.reelsComplete(onComplete) : null);
         }
     }
 
-    private reelsComplete(): void {
-        this.isRunning = false;
+    reelsComplete(callback?: () => void): void {
+        this.isRunning = false; // Fix the assignment (was using == instead of =)
+        if (callback) callback();
     }
 
     private setupTicker(): void {

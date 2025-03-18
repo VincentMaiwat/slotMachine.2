@@ -1,12 +1,14 @@
+//main.ts
 import { Application, Container} from "pixi.js";
 import { BackgroundSettings } from "../scenes/background";
 import { initDevtools } from '@pixi/devtools';
 import { Logo } from "../components/logo"
 import { Button } from "../components/button";
 import { Reels } from "../components/reels";
-import { initializeAssets } from "../utils/assetLoader";
+import { AssetLoader } from "../utils/assetLoader";
 import { Balance } from "../components/balance";
 import { Winnings } from "../components/winnings";
+import { Cynda } from "../components/cyndaquil";
 
 async function main() {
   // Create and initialize application
@@ -15,9 +17,12 @@ async function main() {
     resizeTo: window,
     background: '#000000'
   });
+
   document.body.appendChild(app.canvas);
   app.canvas.style.position = "absolute";
   initDevtools({ app });
+
+  await AssetLoader.init(app);
 
   await BackgroundSettings.create(app);
   await Logo.create(app);
@@ -27,19 +32,19 @@ async function main() {
   await reels.initialize();
 
   await Winnings.create(app);
+  await Cynda.create(app);
 
   const manageBalance = await Balance.create(app);
 
   // Create button and connect to reels
   const button = await Button.create(app);
 
+
   button.setClickCallback(() => {
-    reels.spin();
-    button.connectBalance(manageBalance);
-    // Reset Button after 4 seconds
-    setTimeout(() => {
+    reels.spin(() => {
       button.reset();
-    }, 4000);
+  });
+    button.connectBalance(manageBalance);
   });
 }
 main().catch(console.error);
