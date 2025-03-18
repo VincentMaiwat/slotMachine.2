@@ -1,3 +1,4 @@
+//reels.ts
 import {
     Application,
     Assets,
@@ -107,49 +108,6 @@ export class Reels {
         console.log('Container width:', containerWidth);
         console.log('X position:', this.containerGrid.x);
     }
-
-    // private handleResize(): void {
-    //     if (this.containerGrid) {
-    //         this.containerGrid.y = (window.innerHeight - this.containerGrid.height)/2; // Using actual height
-    //         this.containerGrid.x = (window.innerWidth - this.containerGrid.width)/2;  // Using actual width
-    //         // this.containerGrid.width = (window.innerWidth - this.containerGrid.width);
-    //     }
-    //     if (this.mask) {
-    //         this.mask.x = this.containerGrid.x;
-    //         this.mask.y = this.containerGrid.y;
-    //     }
-    // }
-
-    // private setupContainerGrid(): void {
-    //     // Create background rectangle
-    //     const rectangle = new Graphics()
-    //         .roundRect(0, 0, window.innerWidth/2.14, window.innerHeight/1.84)
-    //         .fill({
-    //             color: '#ffffff',
-    //             alpha: 0.4
-    //         });
-
-    //     this.containerGrid.addChild(rectangle);
-
-    //     // Position the container
-    //     this.app.stage.addChild(this.containerGrid);
-    //     this.containerGrid.y = (this.app.screen.height - 500) / 2; // Using actual height
-    //     this.containerGrid.x = (this.app.screen.width - 900) / 2;  // Using actual width
-
-    //     // this.containerGrid.y = (window.innerHeight - this.containerGrid.height)/2; // Using actual height
-    //     // this.containerGrid.x = (window.innerWidth - this.containerGrid.width)/2;  // Using actual width
-
-    //     // Create mask to prevent symbols from going out of bounds
-    //     this.mask = new Graphics()
-    //         .roundRect(0, 0,1450, 710)
-    //         .fill({
-    //             color: '#ffffff',
-    //             alpha: 0.4
-    //         });
-
-    //     this.containerGrid.mask = this.mask;
-    //     this.app.stage.addChild(this.mask);
-    // }
 
     private async loadAssets(): Promise<void> {
         // Load all textures

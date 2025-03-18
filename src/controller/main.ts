@@ -6,7 +6,7 @@ import { Button } from "../components/button";
 import { Reels } from "../components/reels";
 import { initializeAssets } from "../utils/assetLoader";
 import { Balance } from "../components/balance";
-
+import { Winnings } from "../components/winnings";
 
 async function main() {
   // Create and initialize application
@@ -25,6 +25,8 @@ async function main() {
   // Initialize reels
   const reels = new Reels(app);
   await reels.initialize();
+
+  await Winnings.create(app);
 
   const manageBalance = await Balance.create(app);
 
