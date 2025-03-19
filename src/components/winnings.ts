@@ -1,4 +1,4 @@
-//balance.ts
+//winnings.ts
 import { Application, Assets, Container, Graphics, Sprite, Texture, Text, TextStyle } from "pixi.js";
 
 export class Winnings {
@@ -89,20 +89,21 @@ export class Winnings {
         this.containerWins.position.set(140,280);
     }
     private handleResize(): void {
-        // if (this.containerWins){
-        //     this.containerWins.x = ((window.innerWidth - this.containerWins.width)/2) - 700 ;
-        //     this.containerWins.y = (window.innerHeight - this.containerWins.height)/3.1 ;
-        // }
         if (this.containerWins) {
-            // Calculate a scale factor based on window width/height
-            const scaleFactor = Math.min(window.innerWidth / 1920, window.innerHeight / 880);
+            // Calculate a scale based on window width/height
+            const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
+            this.containerWins.scale.set(scaleAmount);
 
-            // Apply the scale factor to the container
-            this.containerWins.scale.set(scaleFactor);
+            // position of the container from the center
+            const offsetX = -850;
+            const offsetY = -180;
 
-            // Recalculate position based on the scaled size
-            this.containerWins.x = window.innerWidth - this.containerWins.width * scaleFactor - 1200;
-            this.containerWins.y = (window.innerHeight - this.containerWins.height * scaleFactor) / 3.1;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            this.containerWins.x = centerX + (offsetX * scaleAmount);
+            this.containerWins.y = centerY + (offsetY * scaleAmount);
+
         }
     }
 }

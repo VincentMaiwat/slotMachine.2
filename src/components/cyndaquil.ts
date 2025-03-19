@@ -1,4 +1,5 @@
 import { Application, Assets, Container, Sprite, Texture} from "pixi.js";
+import { AssetLoader } from "../utils/assetLoader";
 
 export class Cynda{
     private app: Application;
@@ -44,6 +45,7 @@ export class Cynda{
 
             return Promise.resolve();
         }catch (error){
+            console.log('error');
             return Promise.reject(error);
         }
     }

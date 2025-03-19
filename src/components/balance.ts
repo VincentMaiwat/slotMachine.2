@@ -15,6 +15,7 @@ export class Balance {
     private balance: { value: number } = { value: 1000 };
 
     constructor (app: Application){
+        console.log("check ");
         this.app = app;
 
         // Container for balance
@@ -93,9 +94,20 @@ export class Balance {
         this.containerCoins.position.set(1490,280);
     }
     private handleResize(): void {
-        if (this.containerCoins){
-            this.containerCoins.x = (1490);
-            this.containerCoins.y = (window.innerHeight - this.containerCoins.height)/3.1 ;
+        if (this.containerCoins) {
+            // Calculate a scale based on window width/height
+            const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
+            this.containerCoins.scale.set(scaleAmount);
+
+            // position of the container from the center
+            const offsetX = 550;
+            const offsetY = -180;
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            this.containerCoins.x = centerX + (offsetX * scaleAmount);
+            this.containerCoins.y = centerY + (offsetY * scaleAmount);
 
         }
     }

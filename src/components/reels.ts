@@ -55,11 +55,9 @@ export class Reels {
         this.setupTicker();
     }
     private setupContainerGrid(): void {
-        // Use consistent approach for container size
         const containerWidth = 900;
         const containerHeight = 500;
 
-        // Create background rectangle with consistent size
         const rectangle = new Graphics()
             .roundRect(0, 0, containerWidth, containerHeight)
             .fill({
@@ -68,8 +66,6 @@ export class Reels {
             });
 
         this.containerGrid.addChild(rectangle);
-
-        // Add container to stage first
         this.app.stage.addChild(this.containerGrid);
 
         // Create mask with the same dimensions as the container
@@ -80,32 +76,41 @@ export class Reels {
                 alpha: 0.4
             });
 
-        // Add mask to stage
         this.app.stage.addChild(this.mask);
-
         // Apply mask to container
         this.containerGrid.mask = this.mask;
-
-        // Position everything using window dimensions - more responsive
         this.handleResize();
     }
 
     private handleResize(): void {
+        const baseWidth = 1920;
+        const baseHeight = 920;
+
+        function getWindowScale(): number {
+            const scaleX = window.innerWidth / baseWidth;
+            const scaleY = window.innerHeight / baseHeight;
+            return Math.min(scaleX, scaleY); // Maintain aspect ratio
+        }
+
         if (!this.containerGrid || !this.mask) return;
+        const scale = getWindowScale();
+        this.containerGrid.scale.set(scale);
 
-        // Get explicit rectangle dimensions rather than relying on container.width
-        const containerWidth = 900;  // Use the fixed width you defined for your rectangle
-        const containerHeight = 500; // Use the fixed height you defined for your rectangle
+        // Original size of container
+        const containerWidth = 900;
+        const containerHeight = 500;
 
-        // Precisely center both horizontally and vertically
-        this.containerGrid.x = Math.round((window.innerWidth - containerWidth) / 2);
-        this.containerGrid.y = Math.round((window.innerHeight - containerHeight) / 2);
+        // Calculate scaled dimensions
+        const scaledWidth = containerWidth * scale;
+        const scaledHeight = containerHeight * scale;
 
-        // Ensure mask is positioned exactly the same
+        this.containerGrid.x = (window.innerWidth - scaledWidth) / 2;
+        this.containerGrid.y = (window.innerHeight - scaledHeight) / 2;
+
+        // Ensure mask is positioned exactly the same and scaled
         this.mask.x = this.containerGrid.x;
         this.mask.y = this.containerGrid.y;
-
-
+        this.mask.scale.set(scale);
     }
 
     private createReels(): void {

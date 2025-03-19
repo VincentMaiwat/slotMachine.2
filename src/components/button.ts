@@ -35,9 +35,47 @@ export class Button {
     }
 
     private handleResize(): void {
-        if (this.sprite) {
-            this.sprite.x = window.innerWidth/2;
-            this.sprite.y = (window.innerHeight/2) + 330;
+        if (this.container) {
+            // this.container.x = window.innerWidth/2;
+            // this.container.y = (window.innerHeight/2) + 330;
+            const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
+            this.container.scale.set(scaleAmount);
+
+            const offsetX = 0;
+            const offsetY = 300;
+
+            const centerX = window.innerWidth/2;
+            const centerY = window.innerHeight/2;
+
+            this.container.x = centerX + (offsetX * scaleAmount);
+            this.container.y = centerY + (offsetY * scaleAmount);
+
+        }
+    }
+
+    private applyConfigurations(): void {
+        if (!this.sprite) return;
+
+        this.sprite.width = this.width;
+        this.sprite.height = this.height;
+        this.sprite.anchor.set(0.5);
+
+        this.container.x = (this.xPosition || this.app.screen.width) / 2;
+        this.container.y = (this.yPosition || this.app.screen.height );
+
+        // Set interactivity
+        if (this.isInteractive) {
+            this.sprite.eventMode = 'static';
+            this.sprite.cursor = 'pointer';
+            this.sprite.removeAllListeners('pointerdown');
+            this.sprite.on('pointerdown', this.onClick.bind(this));
+        } else {
+            this.sprite.eventMode = 'none';
+            this.sprite.cursor = 'default';
+        }
+        // Set blinking animation if pulsing is enabled
+        if (this.isPulsing) {
+            this.setupPulsingEffect();
         }
     }
 
@@ -60,31 +98,6 @@ export class Button {
         }
     }
 
-    private applyConfigurations(): void {
-        if (!this.sprite) return;
-
-        this.sprite.width = this.width;
-        this.sprite.height = this.height;
-        this.sprite.anchor.set(0.5);
-
-        this.sprite.x = (this.xPosition || this.app.screen.width) / 2;
-        this.sprite.y = (this.yPosition || this.app.screen.height );
-
-        // Set interactivity
-        if (this.isInteractive) {
-            this.sprite.eventMode = 'static';
-            this.sprite.cursor = 'pointer';
-            this.sprite.removeAllListeners('pointerdown');
-            this.sprite.on('pointerdown', this.onClick.bind(this));
-        } else {
-            this.sprite.eventMode = 'none';
-            this.sprite.cursor = 'default';
-        }
-        // Set blinking animation if pulsing is enabled
-        if (this.isPulsing) {
-            this.setupPulsingEffect();
-        }
-    }
 
     private setupPulsingEffect(): void {
         let blinkSpeed = 0.01;
