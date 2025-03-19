@@ -105,10 +105,7 @@ export class Reels {
         this.mask.x = this.containerGrid.x;
         this.mask.y = this.containerGrid.y;
 
-        // For debugging - you can log the positions
-        console.log('Window width:', window.innerWidth);
-        console.log('Container width:', containerWidth);
-        console.log('X position:', this.containerGrid.x);
+
     }
 
     private createReels(): void {
@@ -261,4 +258,5 @@ export class Reels {
     getContainer(): Container {
         return this.containerGrid;
     }
+
 }

@@ -13,7 +13,6 @@ export class Balance {
 
 
     private balance: { value: number } = { value: 1000 };
-    private winnings: { value: number } = { value: 0 };
 
     constructor (app: Application){
         this.app = app;
@@ -51,12 +50,10 @@ export class Balance {
         // Update the displayed text
         this.txtCoins.text = this.balance.value.toString();
     }
-
     // Getter for current balance
     public getBalance(): number {
         return this.balance.value;
     }
-
     static async create(app: Application): Promise<Balance>{
         const balance = new Balance(app);
         await balance.initialize();
@@ -97,7 +94,7 @@ export class Balance {
     }
     private handleResize(): void {
         if (this.containerCoins){
-            this.containerCoins.x = (window.innerWidth/1.5);
+            this.containerCoins.x = (1490);
             this.containerCoins.y = (window.innerHeight - this.containerCoins.height)/3.1 ;
 
         }

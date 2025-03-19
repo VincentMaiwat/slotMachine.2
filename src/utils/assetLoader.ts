@@ -16,15 +16,22 @@ export class AssetLoader {
     private static progressBar: Graphics;
     private static progressText: Text;
     private static loadingContainer: Container;
+    private static logoSprite: Sprite;
+
 
     public static async init(app: Application): Promise<void> {
         this.app = app;
-        this.setupLoadingScreen();
+
+        const logoTexture = await Assets.load('assets/images/mLogo.jpg');
+
+        this.setupLoadingScreen(logoTexture);
+
         await this.loadAllAssets();
+
         this.hideLoadingScreen();
     }
 
-    private static setupLoadingScreen(): void {
+    private static setupLoadingScreen(logoTexture: Texture): void {
         // Create container for loading elements
         this.loadingContainer = new Container();
         this.app.stage.addChild(this.loadingContainer);
@@ -32,28 +39,45 @@ export class AssetLoader {
         // Create background
         const background = new Graphics();
         background.beginFill(0x000000, 0.7);
-        background.drawRect(0, 0, this.app.screen.width, this.app.screen.height);
+        background.rect(0, 0, this.app.screen.width, this.app.screen.height);
         background.endFill();
         this.loadingContainer.addChild(background);
+
+        // Create logo with the already loaded texture
+        this.logoSprite = new Sprite(logoTexture);
+        this.logoSprite.position.set(
+            this.app.screen.width / 2,
+            this.app.screen.height / 3
+        );
+        this.logoSprite.anchor.set(0.5);
+
+        const desiredWidth = 400;
+        const desiredHeight = 400;
+        this.logoSprite.scale.set(
+            desiredWidth / logoTexture.width,
+            desiredHeight / logoTexture.height
+        );
+
+        this.loadingContainer.addChild(this.logoSprite);
 
         // Create title text
         const titleText = new Text("Loading Game Assets", {
             fontFamily: "Arial",
-            fontSize: 36,
+            fontSize: 24,
             fill: 0xffffff,
             align: "center"
         });
         titleText.anchor.set(0.5);
         titleText.x = this.app.screen.width / 2;
-        titleText.y = this.app.screen.height / 2 - 50;
+        titleText.y = this.app.screen.height / 2 + 250;
         this.loadingContainer.addChild(titleText);
 
         // Create progress bar background
         const progressBarBg = new Graphics();
-        progressBarBg.beginFill(0x333333);
-        progressBarBg.drawRoundedRect(
+        progressBarBg.fill(0x333333);
+        progressBarBg.roundRect(
             this.app.screen.width / 2 - 200,
-            this.app.screen.height / 2,
+            this.app.screen.height / 2 + 300,
             400,
             30,
             15
@@ -63,11 +87,11 @@ export class AssetLoader {
 
         // Create progress bar
         this.progressBar = new Graphics();
-        this.progressBar.beginFill(0xff9900);
-        this.progressBar.drawRoundedRect(
+        this.progressBar.fill(0xff9900);
+        this.progressBar.roundRect(
             this.app.screen.width / 2 - 200,
-            this.app.screen.height / 2,
-            0, // Initial width is 0
+            this.app.screen.height / 2 + 300,
+            0,
             30,
             15
         );
@@ -83,20 +107,22 @@ export class AssetLoader {
         });
         this.progressText.anchor.set(0.5);
         this.progressText.x = this.app.screen.width / 2;
-        this.progressText.y = this.app.screen.height / 2 + 60;
+        this.progressText.y = this.app.screen.height / 2 + 350;
         this.loadingContainer.addChild(this.progressText);
     }
+
 
     private static updateProgress(progress: number): void {
         // Update progress bar width
         const width = Math.floor(400 * progress);
         this.progressBar.clear();
-        this.progressBar.fill(0xff9900);
-        this.progressBar.rect(
+        this.progressBar.fill(0xF6EDB0);
+        this.progressBar.roundRect(
             this.app.screen.width / 2 - 200,
-            this.app.screen.height / 2,
+            this.app.screen.height / 2 + 300,
             width,
             30,
+            15
         );
         this.progressBar.endFill();
 
@@ -135,6 +161,10 @@ export class AssetLoader {
             'assets/images/back.png',
             'assets/images/front.png',
             'assets/images/middle.png',
+            'assets/images/cyndaquil.png',
+            'assets/images/cyndaquil-fire.png',
+            'assets/images/pokeball.png',
+
         ];
 
         const bundleId = "gameAssets";
@@ -179,20 +209,26 @@ export class AssetLoader {
     public static getTextures(): Texture[] {
         return this.textures;
     }
-
     public static getSpinTexture(): Texture {
         return this.spinTexture;
     }
-
     public static getGlTexture(): Texture {
         return this.glTexture;
     }
-
     public static getCoinTexture(): Texture {
         return this.coinTexture;
     }
-
     public static getLogoTexture(): Texture {
-      return this.logoTexture;
-  }
+        return this.logoTexture;
+    }
+    public static getFrontTexture(): Texture {
+        return this.frontTexture;
+    }
+    public static getMiddleTexture(): Texture {
+        return this.middleTexture;
+    }
+    public static getBackTexture(): Texture {
+        return this.backTexture;
+    }
+
 }

@@ -25,6 +25,8 @@ export class Winnings {
 
         // Add container for winnings
         this.containerWins = new Container();
+        // this.containerWins.pivot.set(this.containerWins.width/2, this.containerWins.height/2);
+
         this.app.stage.addChild(this.containerWins);
 
         this.txtWins = new Text({
@@ -32,7 +34,12 @@ export class Winnings {
             style: textStyle
         });
 
+        // window.addEventListener('load', function(){
+
+        // });
+
         window.addEventListener('resize', this.handleResize.bind(this));
+
     }
 
     public addWinnings(amount: number): void {
@@ -78,14 +85,24 @@ export class Winnings {
         this.sprWins.x =((this.rectWins.width - this.txtWins.width)/2.5);
         this.sprWins.y = 20 ;
 
+
         this.containerWins.position.set(140,280);
     }
     private handleResize(): void {
-        if (this.containerWins){
-            this.containerWins.x = 150;
-            this.containerWins.y = (window.innerHeight - this.containerWins.height)/3.1 ;
+        // if (this.containerWins){
+        //     this.containerWins.x = ((window.innerWidth - this.containerWins.width)/2) - 700 ;
+        //     this.containerWins.y = (window.innerHeight - this.containerWins.height)/3.1 ;
+        // }
+        if (this.containerWins) {
+            // Calculate a scale factor based on window width/height
+            const scaleFactor = Math.min(window.innerWidth / 1920, window.innerHeight / 880);
 
+            // Apply the scale factor to the container
+            this.containerWins.scale.set(scaleFactor);
+
+            // Recalculate position based on the scaled size
+            this.containerWins.x = window.innerWidth - this.containerWins.width * scaleFactor - 1200;
+            this.containerWins.y = (window.innerHeight - this.containerWins.height * scaleFactor) / 3.1;
         }
     }
-
 }

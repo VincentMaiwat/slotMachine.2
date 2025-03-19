@@ -1,7 +1,10 @@
+//background.ts
+
 import { Application, Assets, Container, Sprite, TilingSprite, Texture } from 'pixi.js';
+import { AssetLoader } from '../utils/assetLoader';
 
 export interface BackgroundLayerConfig {
-  imagePath: string;
+  getTexture: () => Texture;
   speedX: number;
   isTiling: boolean;
 }
@@ -18,17 +21,17 @@ export class BackgroundSettings {
   // Default background configuration
   private static defaultLayers: BackgroundLayerConfig[] = [
     {
-      imagePath: 'assets/images/back.png',
+      getTexture: () => AssetLoader.getBackTexture(),
       speedX: 0,
       isTiling: false
     },
     {
-      imagePath: 'assets/images/middle.png',
+      getTexture: () => AssetLoader.getMiddleTexture(),
       speedX: 0.5,
       isTiling: true
     },
     {
-      imagePath: 'assets/images/front.png',
+      getTexture: () => AssetLoader.getFrontTexture(),
       speedX: 1,
       isTiling: true
     }
@@ -55,38 +58,31 @@ export class BackgroundSettings {
   }
 
   // Static method to create and initialize a background
-  static async create(app: Application, customLayers?: BackgroundLayerConfig[]): Promise<BackgroundSettings> {
+  static create(app: Application, customLayers?: BackgroundLayerConfig[]): BackgroundSettings{
     const background = new BackgroundSettings(app);
-    await background.initialize(customLayers || this.defaultLayers);
+    background.initialize(customLayers || this.defaultLayers);
     return background;
   }
 
-  async initialize(layersConfig: BackgroundLayerConfig[]): Promise<void> {
+  initialize(layersConfig: BackgroundLayerConfig[]): void {
     try {
-      // Load all textures first
-      const assetPaths = layersConfig.map(config => config.imagePath);
-      const textures = await Assets.load(assetPaths);
 
-      // Create layers in the specified order
       for (const config of layersConfig) {
-        await this.addLayer(config, textures[config.imagePath]);
+        this.addLayer(config);
       }
-
       // Start the animation
       this.resume();
-
-      return Promise.resolve();
     } catch (error) {
       console.error("Failed to initialize background:", error);
-      return Promise.reject(error);
     }
   }
 
-  private async addLayer(config: BackgroundLayerConfig, texture: Texture): Promise<void> {
-    const { imagePath, speedX, isTiling } = config;
+  private addLayer(config: BackgroundLayerConfig): void{
+    const { getTexture, speedX, isTiling } = config;
 
     let sprite: Sprite | TilingSprite;
 
+    const texture = getTexture();
     if (isTiling) {
       // Create a tiling sprite
       sprite = new TilingSprite({
