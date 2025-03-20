@@ -68,6 +68,7 @@ export class Balance {
 
             this.applySettings();
             this.containerCoins.addChild(this.rectCoins,this.sprBall,this.txtCoins);
+            this.handleResize();
 
             return Promise.resolve();
         }catch (error){

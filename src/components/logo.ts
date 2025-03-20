@@ -24,7 +24,19 @@ export class Logo {
   // Handle window resize
   private handleResize(): void {
     if (this.container) {
-      this.container.position.set((window.innerWidth)/2,(window.innerHeight)/7);
+      const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
+            this.container.scale.set(scaleAmount);
+
+            // Offset from
+            const offsetX = 0;
+            const offsetY = -350;
+
+            const centerX = window.innerWidth/2;
+            const centerY = window.innerHeight/2;
+
+            this.container.x = centerX + (offsetX * scaleAmount);
+            this.container.y = centerY + (offsetY * scaleAmount);
+
     }
   }
 
@@ -45,6 +57,8 @@ export class Logo {
       this.applyConfigurations();
       this.container.addChild(this.sprite);
 
+      this.handleResize();
+
       return Promise.resolve();
     } catch (error) {
       console.error("Failed to load logo:", error);
@@ -59,7 +73,7 @@ export class Logo {
     this.sprite.height = this.height;
     this.sprite.anchor.set(0.5,0.5);
     // Set position (default to center if not specified)
-    this.container.position.set((window.innerWidth - this.container.width)/2,(window.innerHeight - this.container.height)/7);
+    this.container.position.set((window.innerWidth - this.container.width)/2,120);
    }
 
 }

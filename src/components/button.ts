@@ -1,3 +1,4 @@
+// Button.ts
 import {
     Application,
     Sprite,
@@ -8,6 +9,7 @@ import {
 } from 'pixi.js';
 import { Balance } from './balance';
 import { AssetLoader } from '../utils/assetLoader';
+import { Cynda } from './cyndaquil';
 
 export class Button {
     private app: Application;
@@ -25,6 +27,7 @@ export class Button {
     private isPulsing: boolean = true;
 
     private balanceManager?: Balance;
+    private changeCynda?: Cynda;
 
     constructor(app: Application) {
         this.app = app;
@@ -34,15 +37,18 @@ export class Button {
         window.addEventListener('resize', this.handleResize.bind(this));
     }
 
+    public connectCynda(cynda: Cynda): void {
+        this.changeCynda = cynda;
+    }
+
     private handleResize(): void {
         if (this.container) {
-            // this.container.x = window.innerWidth/2;
-            // this.container.y = (window.innerHeight/2) + 330;
             const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
             this.container.scale.set(scaleAmount);
 
+            // Offset from
             const offsetX = 0;
-            const offsetY = 300;
+            const offsetY = 350;
 
             const centerX = window.innerWidth/2;
             const centerY = window.innerHeight/2;
@@ -91,6 +97,8 @@ export class Button {
             this.sprite = Sprite.from(this.texture);
             this.applyConfigurations();
             this.container.addChild(this.sprite);
+
+            this.handleResize();
             return Promise.resolve();
         } catch (error) {
             console.error("Failed to load logo:", error);
@@ -128,6 +136,7 @@ export class Button {
         this.balanceManager = balance;
     }
 
+
     // Method to set click callback
     public setClickCallback(callback: () => void): void {
         this.onClickCallback = callback;
@@ -140,6 +149,10 @@ export class Button {
 
         if (this.balanceManager) {
             this.balanceManager.deductBalance(5);
+        }
+
+        if (this.changeCynda) {
+            this.changeCynda.showCyndaF();
         }
 
         // Change interactivity
@@ -174,6 +187,10 @@ export class Button {
     public reset = async (): Promise<void> => {
         this.isInteractive = true;
         this.isPulsing = true;
+
+        if (this.changeCynda) {
+            this.changeCynda.showCynda();
+        }
 
         try {
             // Load original image

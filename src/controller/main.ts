@@ -31,20 +31,22 @@ async function main() {
   const reels = new Reels(app);
   await reels.initialize();
 
+  const connectCynda = await Cynda.create(app);
+  
   await Winnings.create(app);
-  await Cynda.create(app);
 
   const manageBalance = await Balance.create(app);
 
   // Create button and connect to reels
   const button = await Button.create(app);
 
-
   button.setClickCallback(() => {
     reels.spin(() => {
       button.reset();
   });
     button.connectBalance(manageBalance);
+    button.connectCynda(connectCynda);
   });
+
 }
 main().catch(console.error);

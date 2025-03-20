@@ -62,6 +62,7 @@ export class Winnings {
 
             this.applySettings();
             this.containerWins.addChild(this.rectWins,this.sprWins,this.txtWins);
+            this.handleResize();
 
             return Promise.resolve();
         }catch (error){
@@ -85,13 +86,13 @@ export class Winnings {
         this.sprWins.x =((this.rectWins.width - this.txtWins.width)/2.5);
         this.sprWins.y = 20 ;
 
-
         this.containerWins.position.set(140,280);
     }
     private handleResize(): void {
         if (this.containerWins) {
             // Calculate a scale based on window width/height
-            const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
+            const scaleAmount = Math.min(window.innerWidth / 1920,
+                window.innerHeight / 920);
             this.containerWins.scale.set(scaleAmount);
 
             // position of the container from the center

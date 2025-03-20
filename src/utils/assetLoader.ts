@@ -11,6 +11,8 @@ export class AssetLoader {
     private static backTexture: Texture;
     private static middleTexture: Texture;
     private static frontTexture: Texture;
+    private static cyndaTexture: Texture;
+    private static cyndaFTexture: Texture;
 
     private static app: Application;
     private static progressBar: Graphics;
@@ -39,20 +41,20 @@ export class AssetLoader {
         // Create background
         const background = new Graphics();
         background.beginFill(0x000000, 0.7);
-        background.rect(0, 0, this.app.screen.width, this.app.screen.height);
+        background.rect(0, 0, window.innerWidth, window.innerHeight);
         background.endFill();
         this.loadingContainer.addChild(background);
 
         // Create logo with the already loaded texture
         this.logoSprite = new Sprite(logoTexture);
         this.logoSprite.position.set(
-            this.app.screen.width / 2,
-            this.app.screen.height / 3
+            window.innerWidth / 2,
+            window.innerHeight / 3
         );
         this.logoSprite.anchor.set(0.5);
 
-        const desiredWidth = 400;
-        const desiredHeight = 400;
+        const desiredWidth = window.innerWidth/3.5;
+        const desiredHeight = window.innerHeight/2;
         this.logoSprite.scale.set(
             desiredWidth / logoTexture.width,
             desiredHeight / logoTexture.height
@@ -68,16 +70,16 @@ export class AssetLoader {
             align: "center"
         });
         titleText.anchor.set(0.5);
-        titleText.x = this.app.screen.width / 2;
-        titleText.y = this.app.screen.height / 2 + 250;
+        titleText.x = window.innerWidth / 2;
+        titleText.y = window.innerHeight / 2 + 250;
         this.loadingContainer.addChild(titleText);
 
         // Create progress bar background
         const progressBarBg = new Graphics();
         progressBarBg.fill(0x333333);
         progressBarBg.roundRect(
-            this.app.screen.width / 2 - 200,
-            this.app.screen.height / 2 + 300,
+            window.innerWidth / 2 - 200,
+            window.innerHeight / 2 + 300,
             400,
             30,
             15
@@ -89,8 +91,8 @@ export class AssetLoader {
         this.progressBar = new Graphics();
         this.progressBar.fill(0xff9900);
         this.progressBar.roundRect(
-            this.app.screen.width / 2 - 200,
-            this.app.screen.height / 2 + 300,
+            window.innerWidth / 2 - 200,
+            window.innerHeight / 2 + 300,
             0,
             30,
             15
@@ -106,8 +108,8 @@ export class AssetLoader {
             align: "center"
         });
         this.progressText.anchor.set(0.5);
-        this.progressText.x = this.app.screen.width / 2;
-        this.progressText.y = this.app.screen.height / 2 + 350;
+        this.progressText.x = window.innerWidth / 2;
+        this.progressText.y = window.innerHeight / 2 + 350;
         this.loadingContainer.addChild(this.progressText);
     }
 
@@ -118,8 +120,8 @@ export class AssetLoader {
         this.progressBar.clear();
         this.progressBar.fill(0xF6EDB0);
         this.progressBar.roundRect(
-            this.app.screen.width / 2 - 200,
-            this.app.screen.height / 2 + 300,
+            window.innerWidth / 2 - 200,
+            window.innerHeight / 2 + 300,
             width,
             30,
             15
@@ -204,6 +206,8 @@ export class AssetLoader {
         this.frontTexture = bundle["front"];
         this.middleTexture = bundle["middle"];
         this.backTexture = bundle["back"];
+        this.cyndaTexture = bundle["cyndaquil"];
+        this.cyndaFTexture = bundle["cyndaquil-fire"];
     }
 
     public static getTextures(): Texture[] {
@@ -229,6 +233,12 @@ export class AssetLoader {
     }
     public static getBackTexture(): Texture {
         return this.backTexture;
+    }
+    public static getCyndaTexture(): Texture {
+        return this.cyndaTexture;
+    }
+    public static getCyndaFTexture(): Texture {
+        return this.cyndaFTexture;
     }
 
 }
