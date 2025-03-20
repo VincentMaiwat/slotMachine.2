@@ -119,7 +119,7 @@ export class Cynda{
             this.rightContainer.scale.set(scaleAmount);
 
             // position of the container from the center
-            const offsetX = -980;
+            const offsetX = -940;
             const offsetY = -460;
 
             const centerX = window.innerWidth / 2;

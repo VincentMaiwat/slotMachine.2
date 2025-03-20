@@ -9,6 +9,7 @@ import { AssetLoader } from "../utils/assetLoader";
 import { Balance } from "../components/balance";
 import { Winnings } from "../components/winnings";
 import { Cynda } from "../components/cyndaquil";
+import { gsap } from "gsap";
 
 async function main() {
   // Create and initialize application
@@ -32,7 +33,7 @@ async function main() {
   await reels.initialize();
 
   const connectCynda = await Cynda.create(app);
-  
+
   await Winnings.create(app);
 
   const manageBalance = await Balance.create(app);

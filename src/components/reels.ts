@@ -9,6 +9,7 @@ import {
     Texture
 } from 'pixi.js';
 import { AssetLoader } from '../utils/assetLoader';
+import { gsap } from "gsap";
 
 // Reel propoerties
 interface Reel {
