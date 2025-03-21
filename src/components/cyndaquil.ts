@@ -53,7 +53,7 @@ export class Cynda{
 
             this.leftContainer.addChild(this.sprCyndaLeft, this.sprCyndaFireLeft);
             this.rightContainer.addChild(this.sprCyndaRight, this.sprCyndaFireRight);
-            
+
             this.handleResize();
             return Promise.resolve();
         } catch (error){
@@ -91,9 +91,6 @@ export class Cynda{
         this.sprCyndaFireRight.anchor.set(0.5, 0.5);
         this.sprCyndaFireRight.position.set(1650, 530);
         this.sprCyndaFireRight.visible = false ;
-
-        console.log(this.rightContainer.x, this.rightContainer.y);
-        console.log(this.leftContainer.x, this.leftContainer.y);
 
     }
 

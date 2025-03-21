@@ -145,19 +145,19 @@ export class AssetLoader {
 
         // Register all assets
         const texturePaths = [
-            'assets/images/9.png',
-            'assets/images/A.png',
-            'assets/images/J.png',
-            'assets/images/K.png',
-            'assets/images/Q.png',
-            'assets/images/10.png',
-            'assets/images/wild.png',
-            'assets/images/bonus.png',
-            'assets/images/s1.png',
-            'assets/images/s2.png',
-            'assets/images/s3.png',
-            'assets/images/s4.png',
-            'assets/images/SLOT.png',
+            'assets/images/9.png',  //0
+            'assets/images/A.png',  //1
+            'assets/images/J.png',  //2
+            'assets/images/K.png',  //3
+            'assets/images/Q.png',  //4
+            'assets/images/10.png', //5
+            'assets/images/wild.png', //6
+            'assets/images/bonus.png', //7
+            'assets/images/s1.png', //8
+            'assets/images/s2.png', //9
+            'assets/images/s3.png', //10
+            'assets/images/s4.png', //11
+            'assets/images/SLOT.png',   
             'assets/images/spin.png',
             'assets/images/gl.png',
             'assets/images/back.png',

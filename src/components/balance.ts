@@ -40,7 +40,7 @@ export class Balance {
     // Add these methods to update balance
     public deductBalance(amount: number): void {
         this.balance.value -= amount;
-        console.log(this.balance.value);
+
         // Update the displayed text
         this.txtCoins.text = this.balance.value.toString();
 
