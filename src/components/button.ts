@@ -199,6 +199,7 @@ export class Button {
             if (this.sprite) {
                 this.sprite.texture = originalTexture;
                 this.applyConfigurations();
+                this.handleResize();
             }
         } catch (error) {
             console.error("Failed to reset button:", error);

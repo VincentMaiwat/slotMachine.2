@@ -29,7 +29,7 @@ async function main() {
   await Logo.create(app);
 
   // Initialize reels
-  const reels = new Reels(app);
+  const reels = new Reels(app, 5,3);
   await reels.initialize();
 
   const connectCynda = await Cynda.create(app);

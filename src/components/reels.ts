@@ -1,17 +1,15 @@
-//reels.ts
 import {
     Application,
-    Assets,
-    BlurFilter,
     Container,
     Graphics,
     Sprite,
-    Texture
+    Texture,
+    BlurFilter
 } from 'pixi.js';
 import { AssetLoader } from '../utils/assetLoader';
 import { gsap } from "gsap";
 
-// Reel propoerties
+// Reel properties
 interface Reel {
     container: Container;
     symbols: Sprite[];
@@ -30,10 +28,28 @@ export class Reels {
     private numberOfReels: number = 5;
     private symbolsPerReel: number = 3;
     private isRunning: boolean = false;
-    private tweening: any[] = [];
-
     private mask?: Graphics;
 
+    // Predefined symbol sequences for each reel
+    private reelSet: string[][] = [
+        [ "hv2", "lv3", "lv3", "hv1", "hv1", "lv1", "hv1", "hv4", "lv1", "hv3", "hv2", "hv3", "lv4", "hv4", "lv1", "hv2", "lv4", "lv1", "lv3", "hv2" ],
+        [ "hv1", "lv2", "lv3", "lv2", "lv1", "lv1", "lv4", "lv1", "lv1", "hv4", "lv3", "hv2", "lv1", "lv3", "hv1", "lv1", "lv2", "lv4", "lv3", "lv2" ],
+        [ "lv1", "hv2", "lv3", "lv4", "hv3", "hv2", "lv2", "hv2", "hv2", "lv1", "hv3", "lv1", "hv1", "lv2", "hv3", "hv2", "hv4", "hv1", "lv2", "lv4" ],
+        [ "hv2", "lv2", "hv3", "lv2", "lv4", "lv4", "hv3", "lv2", "lv4", "hv1", "lv1", "hv1", "lv2", "hv3", "lv2", "lv3", "hv2", "lv1", "hv3", "lv2" ],
+        [ "lv3", "lv4", "hv2", "hv3", "hv4", "hv1", "hv3", "hv2", "hv2", "hv4", "hv4", "hv2", "lv2", "hv4", "hv1", "lv2", "hv1", "lv2", "hv4", "lv4" ],
+    ];
+
+    // Current position index for each reel
+    private reelPositions: number[] = [];
+
+    // Target position indices for each reel (predefined outcome)
+    private targetReelPositions: number[] = [];
+
+    // Visible symbols to the screen
+    private screen: string[][] = [];
+
+    // Map of symbol codes to textures
+    private textureMap = new Map<string, Texture>();
 
     constructor(app: Application, numberOfReels: number = 5, symbolsPerReel: number = 3) {
         this.app = app;
@@ -41,20 +57,53 @@ export class Reels {
         this.symbolsPerReel = symbolsPerReel;
         this.containerGrid = new Container();
 
+        // Initialize screen array
+        for (let i = 0; i < symbolsPerReel; i++) {
+            this.screen.push([]);
+            for (let j = 0; j < numberOfReels; j++) {
+                this.screen[i].push("");
+            }
+        }
+
         window.addEventListener('resize', this.handleResize.bind(this));
     }
 
     async initialize(): Promise<void> {
         this.setupContainerGrid();
-        // await AssetLoader.init(this.app);
 
         this.slotTextures = AssetLoader.getTextures();
+
+        // Setup texture mapping for symbols
+        this.textureMap.set("lv1", this.slotTextures[1]);   // A
+        this.textureMap.set("lv2", this.slotTextures[2]);   // J
+        this.textureMap.set("lv3", this.slotTextures[3]);   // K
+        this.textureMap.set("lv4", this.slotTextures[5]);   // 10
+        this.textureMap.set("hv1", this.slotTextures[8]);   // green onion/BULBASAUR
+        this.textureMap.set("hv2", this.slotTextures[9]);   // blue croc/TOTODILE
+        this.textureMap.set("hv3", this.slotTextures[10]);  // violet spiky/GENGAR
+        this.textureMap.set("hv4", this.slotTextures[11]);  // orange pig/TEPIG
+
+        // Initialize reel positions
+        this.setInitialState();
+
+        // Create reels
         this.createReels();
+
         this.app.stage.addChild(this.containerGrid);
 
-        // Setup animation ticker
-        this.setupTicker();
+        // Update initial screen array and ensure proper visualization
+        this.updateScreenArray();
     }
+
+    private setInitialState(): void {
+        this.reelPositions = [];
+        for (let i = 0; i < this.numberOfReels; i++) {
+            this.reelPositions.push(0);
+        }
+        // Set initial target positions same as current positions
+        this.targetReelPositions = [...this.reelPositions];
+    }
+
     private setupContainerGrid(): void {
         const containerWidth = 900;
         const containerHeight = 500;
@@ -119,7 +168,7 @@ export class Reels {
             const containerRow = new Container();
 
             containerRow.x = i * this.widthReel + 43.5; // Spacing between rows
-            containerRow.y = 190 ;
+            containerRow.y = 60;
             this.containerGrid.addChild(containerRow);
 
             const reel: Reel = {
@@ -134,24 +183,99 @@ export class Reels {
             reel.blur.blurY = 0;
             containerRow.filters = [reel.blur];
 
-            // Build the symbols
-            for (let j = 0; j < this.symbolsPerReel; j++) {
-                const symbol = new Sprite(this.slotTextures[Math.floor(Math.random() * this.slotTextures.length)]);
+            // Create a mask for this reel column
+            const reelMask = new Graphics()
+                .rect(0, 0, this.sizeSymbol, this.symbolsPerReel * this.sizeSymbol)
+                .fill({ color: 0xFFFFFF });
+            containerRow.addChild(reelMask);
 
-                // Scale the symbol to fit symbol area
-                symbol.y = j * this.sizeSymbol;
-                symbol.scale.x = symbol.scale.y = Math.min(
-                    this.sizeSymbol / symbol.width,
-                    this.sizeSymbol / symbol.height
+            // Create a container for the symbols and apply the mask
+            const symbolsContainer = new Container();
+            symbolsContainer.mask = reelMask;
+            containerRow.addChild(symbolsContainer);
+
+            // Build all symbols for this reel based on reelSet
+            const totalSymbolsInReel = this.reelSet[i].length;
+
+            for (let j = 0; j < totalSymbolsInReel; j++) {
+                const symbolCode = this.reelSet[i][j];
+                const texture = this.textureMap.get(symbolCode);
+
+                if (!texture) {
+                    console.error(`Texture not found for symbol code: ${symbolCode}`);
+                    continue;
+                }
+
+                const symbol = new Sprite(texture);
+
+                // Set consistent size for all symbols
+                const scale = Math.min(
+                    this.sizeSymbol / texture.width,
+                    this.sizeSymbol / texture.height
                 );
+                symbol.scale.set(scale);
+
+                // Center horizontally
                 symbol.x = Math.round((this.sizeSymbol - symbol.width) / 2);
 
+                // Position vertically based on index
+                symbol.y = j * this.sizeSymbol;
+
                 reel.symbols.push(symbol);
-                containerRow.addChild(symbol);
+                symbolsContainer.addChild(symbol);
             }
+
+            // Position symbols correctly for initial view
+            this.positionSymbolsInReel(reel, i);
 
             this.reels.push(reel);
         }
+    }
+
+    // Position the symbols in a reel based on the current reel position
+    private positionSymbolsInReel(reel: Reel, reelIndex: number): void {
+        const totalSymbols = this.reelSet[reelIndex].length;
+        const currentPosition = this.reelPositions[reelIndex];
+
+        // Position each symbol
+        for (let j = 0; j < reel.symbols.length; j++) {
+            const symbol = reel.symbols[j];
+
+            // Calculate the visual position (starting with current position at the top)
+            // This ensures symbols are positioned correctly relative to the current reel position
+            let visualPos = (j - currentPosition + totalSymbols) % totalSymbols;
+
+            // Set the Y position
+            symbol.y = visualPos * this.sizeSymbol;
+        }
+    }
+
+    // Update the screen array based on current reel positions
+    private updateScreenArray(): void {
+        for (let row = 0; row < this.symbolsPerReel; row++) {
+            for (let col = 0; col < this.numberOfReels; col++) {
+                const reelStop = this.reelPositions[col];
+                let idx = (reelStop + row) % this.reelSet[col].length;
+                this.screen[row][col] = this.reelSet[col][idx];
+            }
+        }
+
+        // Display current screen for debugging
+        console.log("Current Screen:");
+        for (let row = 0; row < this.screen.length; row++) {
+            console.log(this.screen[row].join(" "));
+        }
+    }
+
+    // Generate a random outcome for the next spin
+    private generateRandomOutcome(): number[] {
+        const newPositions = [];
+        for (let i = 0; i < this.numberOfReels; i++) {
+            // Generate random position for each reel
+            const randomPos = Math.floor(Math.random() * this.reelSet[i].length);
+            newPositions.push(randomPos);
+        }
+        return newPositions;
     }
 
     // Method to spin the reels
@@ -159,110 +283,152 @@ export class Reels {
         if (this.isRunning) return;
         this.isRunning = true;
 
+        // Track how many reels have completed spinning
+        let reelsCompleted = 0;
+
+        // Generate a random outcome before spin starts
+        this.targetReelPositions = this.generateRandomOutcome();
+
+        // Log the predetermined outcome for debugging
+        console.log("Predetermined outcome positions:", this.targetReelPositions);
+
+        // Calculate what the final screen will look like
+        const finalScreen: string[][] = [];
+        for (let row = 0; row < this.symbolsPerReel; row++) {
+            finalScreen[row] = [];
+            for (let col = 0; col < this.numberOfReels; col++) {
+                const stopPosition = this.targetReelPositions[col];
+                const symbolIdx = (stopPosition + row) % this.reelSet[col].length;
+                finalScreen[row][col] = this.reelSet[col][symbolIdx];
+            }
+        }
+
+        console.log("Final screen will be:");
+        for (let row = 0; row < finalScreen.length; row++) {
+            console.log(finalScreen[row].join(" "));
+        }
+
+        // Start the spin animation for each reel with sequential delays
         for (let i = 0; i < this.reels.length; i++) {
             const reel = this.reels[i];
-            const target = reel.position + 10 + i * 5  ;
-            const time = 1500 + i * 600;
+            const totalSymbols = this.reelSet[i].length;
+            const reelIndex = i; // Store the reel index for use in callbacks
 
-            this.tweenTo(reel, 'position', target, time, this.backout(0.5), null,
-                i === this.reels.length - 1 ? () => this.reelsComplete(onComplete) : null);
+            // Apply blur effect during spinning
+            gsap.to(reel.blur, {
+                blurY: 5,
+                duration: 0.1
+            });
+
+            // Calculate the exact position needed to show target symbols
+            const currentPosition = this.reelPositions[i];
+            const targetPosition = this.targetReelPositions[i];
+
+            // Calculate how many complete rotations to make before landing on the target
+            const spinRotations = 1 + i; // More rotations for later reels
+
+            // Create duplicate symbols array to track final positions
+            const symbolPositions = [];
+            for (let j = 0; j < reel.symbols.length; j++) {
+                symbolPositions.push({
+                    symbol: reel.symbols[j],
+                    initialY: reel.symbols[j].y,
+                    finalY: 0 // Will calculate this next
+                });
+            }
+
+            // Calculate final positions for each symbol
+            for (let j = 0; j < symbolPositions.length; j++) {
+                const symbolData = symbolPositions[j];
+                const symbolIndex = j;
+
+                // Calculate how many positions this symbol needs to move down
+                // We need the symbol at position j to end up at the correct visual position
+                // relative to the target position
+
+                // First, find what the current visual position of this symbol is
+                const currentVisualPos = (symbolIndex - currentPosition + totalSymbols) % totalSymbols;
+
+                // Then, determine what visual position we want it to have after spinning
+                const targetVisualPos = (symbolIndex - targetPosition + totalSymbols) % totalSymbols;
+
+                // Calculate how many positions down it needs to move
+                let positionsToMove;
+                if (targetVisualPos >= currentVisualPos) {
+                    positionsToMove = targetVisualPos - currentVisualPos;
+                } else {
+                    positionsToMove = targetVisualPos + totalSymbols - currentVisualPos;
+                }
+
+                // Add full rotations
+                positionsToMove += spinRotations * totalSymbols;
+
+                // Calculate the final Y position
+                symbolData.finalY = symbolData.initialY + (positionsToMove * this.sizeSymbol);
+            }
+
+            // Animate each symbol to its final position
+            for (let j = 0; j < symbolPositions.length; j++) {
+                const symbolData = symbolPositions[j];
+
+                gsap.to(symbolData.symbol, {
+                    y: symbolData.finalY,
+                    duration: 2 + i * 0.8, // Sequential timing
+                    ease: "back.out(0.5)",
+                    modifiers: {
+                        // Wrap the y position when it exceeds the reel length
+                        y: y => {
+                            const totalReelHeight = totalSymbols * this.sizeSymbol;
+                            return ((parseFloat(y) % totalReelHeight) + totalReelHeight) % totalReelHeight;
+                        }
+                    },
+                    onComplete: () => {
+                        // Only do this once per reel (on the last symbol)
+                        if (j === symbolPositions.length - 1) {
+                            // Remove blur when the reel stops
+                            gsap.to(reel.blur, {
+                                blurY: 0,
+                                duration: 0
+                            });
+
+                            // Update the reel position
+                            this.reelPositions[reelIndex] = targetPosition;
+
+                            // Make sure symbols are in correct positions
+                            this.positionSymbolsInReel(reel, reelIndex);
+
+                            // Increment the counter of completed reels
+                            reelsCompleted++;
+
+                            // If all reels have completed, update the game state
+                            if (reelsCompleted === this.reels.length) {
+                                this.isRunning = false;
+
+                                // Update the screen array
+                                this.updateScreenArray();
+
+                                // Call the completion callback if provided
+                                if (onComplete) onComplete();
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 
-    reelsComplete(callback?: () => void): void {
-        this.isRunning = false; // Fix the assignment (was using == instead of =)
-        if (callback) callback();
-    }
-
-    private setupTicker(): void {
-        // Ticker for updating the reels
-        this.app.ticker.add(() => {
-            // Update the slots.
-            for (let i = 0; i < this.reels.length; i++) {
-                const reel = this.reels[i];
-                // Update blur filter y amount based on speed.
-                reel.blur.blurY = (reel.position - reel.previousPosition) * 8;
-                reel.previousPosition = reel.position;
-
-                // Update symbol positions on reel.
-                for (let j = 0; j < reel.symbols.length; j++) {
-                    const symbol = reel.symbols[j];
-                    const prevy = symbol.y;
-
-                    symbol.y = ((reel.position + j) % reel.symbols.length) * this.sizeSymbol - this.sizeSymbol;
-                    if (symbol.y < 0 && prevy > this.sizeSymbol) {
-                        // Detect going over and swap a texture.
-                        symbol.texture = this.slotTextures[Math.floor(Math.random() * this.slotTextures.length)];
-                        symbol.scale.x = symbol.scale.y = Math.min(
-                            this.sizeSymbol / symbol.texture.width,
-                            this.sizeSymbol / symbol.texture.height
-                        );
-                        symbol.x = Math.round((this.sizeSymbol - symbol.width) / 2);
-                    }
-                }
-            }
-        });
-
-        // Ticker for tweening
-        this.app.ticker.add(() => {
-            const now = Date.now();
-            const remove: any[] = [];
-
-            for (let i = 0; i < this.tweening.length; i++) {
-                const t = this.tweening[i];
-                const phase = Math.min(1, (now - t.start) / t.time);
-
-                t.object[t.property] = this.lerp(t.propertyBeginValue, t.target, t.easing(phase));
-                if (t.change) t.change(t);
-                if (phase === 1) {
-                    t.object[t.property] = t.target;
-                    if (t.complete) t.complete(t);
-                    remove.push(t);
-                }
-            }
-            for (let i = 0; i < remove.length; i++) {
-                this.tweening.splice(this.tweening.indexOf(remove[i]), 1);
-            }
-        });
-    }
-
-    // Utility method for tweening
-    private tweenTo(object: any, property: string, target: number, time: number, easing: Function,
-                    onchange: Function | null, oncomplete: Function | null): any {
-        const tween = {
-            object,
-            property,
-            propertyBeginValue: object[property],
-            target,
-            easing,
-            time,
-            change: onchange,
-            complete: oncomplete,
-            start: Date.now(),
-        };
-
-        this.tweening.push(tween);
-        return tween;
-    }
-
-    // Basic linear interpolation function
-    private lerp(a1: number, a2: number, t: number): number {
-        return a1 * (1 - t) + a2 * t;
-    }
-
-    // Backout easing function
-    private backout(amount: number): Function {
-        return (t: number) => --t * t * ((amount + 1) * t + amount) + 1;
-    }
-
-    // Method to get the reels array (in case you need to access it from outside)
+    // Method to get the reels array
     getReels(): Reel[] {
         return this.reels;
     }
 
-    // Method to get the container (in case you need to manipulate it from outside)
+    // Method to get the container
     getContainer(): Container {
         return this.containerGrid;
     }
 
+    // Method to get the current screen result
+    getScreenResult(): string[][] {
+        return this.screen;
+    }
 }
