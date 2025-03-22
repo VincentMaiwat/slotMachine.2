@@ -246,7 +246,7 @@ export class Reels {
             let visualPos = (j - currentPosition + totalSymbols) % totalSymbols;
 
             // Set the Y position
-            symbol.y = visualPos * this.sizeSymbol ;
+            symbol.y = visualPos * this.sizeSymbol;
         }
     }
 
@@ -317,32 +317,64 @@ export class Reels {
             // Apply blur effect during spinning
             gsap.to(reel.blur, {
                 blurY: 5,
-                duration:0.2
+                duration: 0.1
             });
 
-            // Calculate the displacement needed to show target symbols
-            const currentIndex = this.reelPositions[i];
-            const targetIndex = this.targetReelPositions[i];
+            // Calculate the exact position needed to show target symbols
+            const currentPosition = this.reelPositions[i];
+            const targetPosition = this.targetReelPositions[i];
 
-            // Calculate spinning parameters
-            const spinAmount = 2 + i; // Base number of complete rotations (more for later reels)
-            const spinDistance = (spinAmount * totalSymbols * this.sizeSymbol);
+            // Calculate how many complete rotations to make before landing on the target
+            const spinRotations = 1 + i; // More rotations for later reels
 
-            // Calculate the exact final position
-            // We need to account for how many complete rotations plus the target position
-            const targetOffset = ((targetIndex - currentIndex + totalSymbols) % totalSymbols);
-            const finalDistance = spinDistance + (targetOffset * this.sizeSymbol);
-
-            // Animate each symbol in the reel
+            // Create duplicate symbols array to track final positions
+            const symbolPositions = [];
             for (let j = 0; j < reel.symbols.length; j++) {
-                const symbol = reel.symbols[j];
-                const startY = symbol.y;
-                const symbolIndex = j; // Store the symbol index for use in callbacks
+                symbolPositions.push({
+                    symbol: reel.symbols[j],
+                    initialY: reel.symbols[j].y,
+                    finalY: 0 // Will calculate this next
+                });
+            }
 
-                gsap.to(symbol, {
-                    y: startY + finalDistance ,
-                    duration: 2 + i * 0.5, // Sequential timing
-                    ease: "expo.out",
+            // Calculate final positions for each symbol
+            for (let j = 0; j < symbolPositions.length; j++) {
+                const symbolData = symbolPositions[j];
+                const symbolIndex = j;
+
+                // Calculate how many positions this symbol needs to move down
+                // We need the symbol at position j to end up at the correct visual position
+                // relative to the target position
+
+                // First, find what the current visual position of this symbol is
+                const currentVisualPos = (symbolIndex - currentPosition + totalSymbols) % totalSymbols;
+
+                // Then, determine what visual position we want it to have after spinning
+                const targetVisualPos = (symbolIndex - targetPosition + totalSymbols) % totalSymbols;
+
+                // Calculate how many positions down it needs to move
+                let positionsToMove;
+                if (targetVisualPos >= currentVisualPos) {
+                    positionsToMove = targetVisualPos - currentVisualPos;
+                } else {
+                    positionsToMove = targetVisualPos + totalSymbols - currentVisualPos;
+                }
+
+                // Add full rotations
+                positionsToMove += spinRotations * totalSymbols;
+
+                // Calculate the final Y position
+                symbolData.finalY = symbolData.initialY + (positionsToMove * this.sizeSymbol);
+            }
+
+            // Animate each symbol to its final position
+            for (let j = 0; j < symbolPositions.length; j++) {
+                const symbolData = symbolPositions[j];
+
+                gsap.to(symbolData.symbol, {
+                    y: symbolData.finalY,
+                    duration: 2 + i * 0.8, // Sequential timing
+                    ease: "back.out(0.5)",
                     modifiers: {
                         // Wrap the y position when it exceeds the reel length
                         y: y => {
@@ -352,19 +384,18 @@ export class Reels {
                     },
                     onComplete: () => {
                         // Only do this once per reel (on the last symbol)
-                        if (symbolIndex === reel.symbols.length - 1) {
+                        if (j === symbolPositions.length - 1) {
                             // Remove blur when the reel stops
                             gsap.to(reel.blur, {
                                 blurY: 0,
-                                duration: 0.2
+                                duration: 0
                             });
 
-                            // Update the reel position for this specific reel only
-                            this.reelPositions[reelIndex] = targetIndex;
+                            // Update the reel position
+                            this.reelPositions[reelIndex] = targetPosition;
 
-                            // Make sure this reel's symbols are correctly positioned
-                            // This ensures each reel displays the correct symbols when it stops
-                            this.positionSymbolsInReel(this.reels[reelIndex], reelIndex);
+                            // Make sure symbols are in correct positions
+                            this.positionSymbolsInReel(reel, reelIndex);
 
                             // Increment the counter of completed reels
                             reelsCompleted++;
@@ -373,7 +404,7 @@ export class Reels {
                             if (reelsCompleted === this.reels.length) {
                                 this.isRunning = false;
 
-                                // Update the screen array only after all reels have stopped
+                                // Update the screen array
                                 this.updateScreenArray();
 
                                 // Call the completion callback if provided
