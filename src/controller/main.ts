@@ -10,6 +10,7 @@ import { Balance } from "../components/balance";
 import { Winnings } from "../components/winnings";
 import { Cynda } from "../components/cyndaquil";
 import { gsap } from "gsap";
+import {Howl} from "howler"; 
 
 async function main() {
   // Create and initialize application
@@ -18,6 +19,14 @@ async function main() {
     resizeTo: window,
     background: '#000000'
   });
+
+  const music_bg = new Howl({
+    src: ['./assets/audio/bg_music.m4a'],
+    autoplay:true,
+    loop: true,
+    volume: 0.3,
+  });
+  music_bg.play();
 
   document.body.appendChild(app.canvas);
   app.canvas.style.position = "absolute";
