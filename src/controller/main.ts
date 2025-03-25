@@ -10,7 +10,7 @@ import { Balance } from "../components/balance";
 import { Winnings } from "../components/winnings";
 import { Cynda } from "../components/cyndaquil";
 import { gsap } from "gsap";
-import {Howl} from "howler"; 
+import {Howl} from 'howler';
 
 async function main() {
   // Create and initialize application

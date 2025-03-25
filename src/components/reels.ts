@@ -18,6 +18,14 @@ interface Reel {
     blur: BlurFilter;
 }
 
+// For winning
+interface WinResult {
+    isWin: boolean;
+    winningSymbols: string[];
+    winAmount: number;
+    winningPayline: number;
+}
+
 export class Reels {
     private app: Application;
     private reels: Reel[] = [];
@@ -39,13 +47,25 @@ export class Reels {
         [ "lv3", "lv4", "hv2", "hv3", "hv4", "hv1", "hv3", "hv2", "hv2", "hv4", "hv4", "hv2", "lv2", "hv4", "hv1", "lv2", "hv1", "lv2", "hv4", "lv4" ],
     ];
 
+    // For winning
+    private payTable = {
+        "lv1": { 3: 10, 4: 25, 5: 50 },   // A
+        "lv2": { 3: 5, 4: 10, 5: 25 },    // J
+        "lv3": { 3: 5, 4: 10, 5: 15 },    // K
+        "lv4": { 3: 5, 4: 10, 5: 15 },    // 10
+        "hv1": { 3: 50, 4: 100, 5: 250 }, // green onion/BULBASAUR
+        "hv2": { 3: 25, 4: 50, 5: 100 },  // blue croc/TOTODILE
+        "hv3": { 3: 25, 4: 50, 5: 75 },  // violet spiky/GENGAR
+        "hv4": { 3: 25, 4: 50, 5: 75 }   // orange pig/TEPIG
+    };
+
     // Current position index for each reel
     private reelPositions: number[] = [];
 
-    // Target position indices for each reel (predefined outcome)
+    // Target position for each reel
     private targetReelPositions: number[] = [];
 
-    // Visible symbols to the screen
+    // Visible symbols on screen
     private screen: string[][] = [];
 
     // Map of symbol codes to textures
@@ -86,15 +106,14 @@ export class Reels {
         // Initialize reel positions
         this.setInitialState();
 
-        // Create reels
         this.createReels();
 
         this.app.stage.addChild(this.containerGrid);
 
-        // Update initial screen array and ensure proper visualization
         this.updateScreenArray();
     }
 
+    // Set initial state based on the instructions
     private setInitialState(): void {
         this.reelPositions = [];
         for (let i = 0; i < this.numberOfReels; i++) {
@@ -104,6 +123,7 @@ export class Reels {
         this.targetReelPositions = [...this.reelPositions];
     }
 
+    // Set up container for the whole reels
     private setupContainerGrid(): void {
         const containerWidth = 900;
         const containerHeight = 500;
@@ -163,16 +183,17 @@ export class Reels {
         this.mask.scale.set(scale);
     }
 
+    // Create symbols and push it on reels
     private createReels(): void {
         for (let i = 0; i < this.numberOfReels; i++) {
-            const containerRow = new Container();
+            const containerCol = new Container();
 
-            containerRow.x = i * this.widthReel + 43.5; // Spacing between rows
-            containerRow.y = 60;
-            this.containerGrid.addChild(containerRow);
+            containerCol.x = i * this.widthReel + 43.5; // Spacing between rows
+            containerCol.y = 60;
+            this.containerGrid.addChild(containerCol);
 
             const reel: Reel = {
-                container: containerRow,
+                container: containerCol,
                 symbols: [],
                 position: 0,
                 previousPosition: 0,
@@ -181,18 +202,18 @@ export class Reels {
 
             reel.blur.blurX = 0;
             reel.blur.blurY = 0;
-            containerRow.filters = [reel.blur];
+            containerCol.filters = [reel.blur];
 
             // Create a mask for this reel column
             const reelMask = new Graphics()
                 .rect(0, 0, this.sizeSymbol, this.symbolsPerReel * this.sizeSymbol)
                 .fill({ color: 0xFFFFFF });
-            containerRow.addChild(reelMask);
+                containerCol.addChild(reelMask);
 
             // Create a container for the symbols and apply the mask
             const symbolsContainer = new Container();
             symbolsContainer.mask = reelMask;
-            containerRow.addChild(symbolsContainer);
+            containerCol.addChild(symbolsContainer);
 
             // Build all symbols for this reel based on reelSet
             const totalSymbolsInReel = this.reelSet[i].length;
@@ -201,10 +222,7 @@ export class Reels {
                 const symbolCode = this.reelSet[i][j];
                 const texture = this.textureMap.get(symbolCode);
 
-                if (!texture) {
-                    console.error(`Texture not found for symbol code: ${symbolCode}`);
-                    continue;
-                }
+                if (!texture) {return;}
 
                 const symbol = new Sprite(texture);
 
@@ -241,9 +259,8 @@ export class Reels {
         for (let j = 0; j < reel.symbols.length; j++) {
             const symbol = reel.symbols[j];
 
-            // Calculate the visual position (starting with current position at the top)
-            // This ensures symbols are positioned correctly relative to the current reel position
-            let visualPos = (j - currentPosition + totalSymbols) % totalSymbols;
+            // Calculate the visual position
+            let visualPos = (j - currentPosition + totalSymbols) % totalSymbols; // Module makes it wrap to top again
 
             // Set the Y position
             symbol.y = visualPos * this.sizeSymbol;
@@ -260,7 +277,7 @@ export class Reels {
             }
         }
 
-        // Display current screen for debugging
+        // Display current screen
         console.log("Current Screen:");
         for (let row = 0; row < this.screen.length; row++) {
             console.log(this.screen[row].join(" "));
@@ -283,13 +300,14 @@ export class Reels {
         if (this.isRunning) return;
         this.isRunning = true;
 
-        // Track how many reels have completed spinning
         let reelsCompleted = 0;
 
-        // Generate a random outcome before spin starts
-        this.targetReelPositions = this.generateRandomOutcome();
+        // uncomment this to check if pay line 1 works
+        this.targetReelPositions = [1, 18, 10, 7, 3];
 
-        // Log the predetermined outcome for debugging
+        // Generate a random outcome before spin starts
+        // this.targetReelPositions = this.generateRandomOutcome();
+
         console.log("Predetermined outcome positions:", this.targetReelPositions);
 
         // Calculate what the final screen will look like
@@ -312,9 +330,8 @@ export class Reels {
         for (let i = 0; i < this.reels.length; i++) {
             const reel = this.reels[i];
             const totalSymbols = this.reelSet[i].length;
-            const reelIndex = i; // Store the reel index for use in callbacks
+            const reelIndex = i;
 
-            // Apply blur effect during spinning
             gsap.to(reel.blur, {
                 blurY: 5,
                 duration: 0.1
@@ -324,8 +341,8 @@ export class Reels {
             const currentPosition = this.reelPositions[i];
             const targetPosition = this.targetReelPositions[i];
 
-            // Calculate how many complete rotations to make before landing on the target
-            const spinRotations = 1 + i; // More rotations for later reels
+            // Set the rotation to increment per reel
+            const spinRotations = 1 + i ;
 
             // Create duplicate symbols array to track final positions
             const symbolPositions = [];
@@ -333,7 +350,7 @@ export class Reels {
                 symbolPositions.push({
                     symbol: reel.symbols[j],
                     initialY: reel.symbols[j].y,
-                    finalY: 0 // Will calculate this next
+                    finalY: 0,
                 });
             }
 
@@ -342,18 +359,15 @@ export class Reels {
                 const symbolData = symbolPositions[j];
                 const symbolIndex = j;
 
-                // Calculate how many positions this symbol needs to move down
-                // We need the symbol at position j to end up at the correct visual position
-                // relative to the target position
-
-                // First, find what the current visual position of this symbol is
+                // Current visual position of the symbols
                 const currentVisualPos = (symbolIndex - currentPosition + totalSymbols) % totalSymbols;
 
-                // Then, determine what visual position we want it to have after spinning
+                // target position of the symbols after spinning
                 const targetVisualPos = (symbolIndex - targetPosition + totalSymbols) % totalSymbols;
 
                 // Calculate how many positions down it needs to move
                 let positionsToMove;
+                // Move down if target is greater than current, else, move down one full rotation.
                 if (targetVisualPos >= currentVisualPos) {
                     positionsToMove = targetVisualPos - currentVisualPos;
                 } else {
@@ -373,7 +387,7 @@ export class Reels {
 
                 gsap.to(symbolData.symbol, {
                     y: symbolData.finalY,
-                    duration: 2 + i * 0.8, // Sequential timing
+                    duration: 2 + i * 0.2, // Sequential timing
                     ease: "back.out(0.5)",
                     modifiers: {
                         // Wrap the y position when it exceeds the reel length
@@ -407,14 +421,143 @@ export class Reels {
                                 // Update the screen array
                                 this.updateScreenArray();
 
+                                // FOR WINNING
+                                // Check for winnings
+                                const payLine1 = this.payLine1();
+                                const payLine3 = this.payLine3();
+                                const payLine2 = this.payLine2();
+
+                                // Log win information
+                                if (payLine1.isWin) {
+                                    console.log("WIN!");
+                                    console.log("Winning Symbols:", payLine1.winningSymbols);
+                                    console.log("Win Amount:", payLine1.winAmount);
+                                }
+                                if(payLine3.isWin){
+                                    console.log("WIN!");
+                                    console.log("Winning Symbols:", payLine3.winningSymbols);
+                                    console.log("Win Amount:", payLine3.winAmount);
+                                }
+                                if(payLine2.isWin) {
+                                    console.log("WIN!");
+                                    console.log("Winning Symbols:", payLine2.winningSymbols);
+                                    console.log("Win Amount:", payLine2.winAmount);
+                                }
+
                                 // Call the completion callback if provided
-                                if (onComplete) onComplete();
+                                // if (onComplete) onComplete();
                             }
                         }
                     }
                 });
             }
         }
+    }
+
+     // FOR WINNING
+     payLine2(): WinResult {
+        // Default result: no win
+        const defaultResult: WinResult = {
+            isWin: false,
+            winningSymbols: [],
+            winAmount: 0,
+            winningPayline: -1
+        };
+
+        // Get the top row
+        const topRow = this.screen[0];
+
+        // get the left-most symbol
+        let consecutiveSymbols: string[] = [topRow[0]];
+
+        // Check for consecutive matching symbols from left to right
+        for (let i = 1; i < topRow.length; i++) {
+            if (topRow[i] === consecutiveSymbols[0]) {
+                consecutiveSymbols.push(topRow[i]);
+            }else {
+                break;
+            }
+        }
+        // Check if 3 consecutive symbol is present
+        if (consecutiveSymbols.length >= 3) {
+            const winSymbol = consecutiveSymbols[0];
+            const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+            return {
+                isWin: true,
+                winningSymbols: consecutiveSymbols,
+                winAmount: winAmount,
+                winningPayline: 2
+            };
+        }
+        return defaultResult;
+    }
+
+     payLine1(): WinResult {
+        const defaultResult: WinResult = {
+            isWin: false,
+            winningSymbols: [],
+            winAmount: 0,
+            winningPayline: -1
+        };
+
+        const middleRow = this.screen[1];
+
+        let consecutiveSymbols: string[] = [middleRow[0]];
+
+        for (let i = 1; i < middleRow.length; i++) {
+            if (middleRow[i] === consecutiveSymbols[0]) {
+                consecutiveSymbols.push(middleRow[i]);
+            }else {
+                break;
+            }
+        }
+        if (consecutiveSymbols.length >= 3) {
+            const winSymbol = consecutiveSymbols[0];
+            const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+            return {
+                isWin: true,
+                winningSymbols: consecutiveSymbols,
+                winAmount: winAmount,
+                winningPayline: 1 // middle row
+            };
+        }
+        return defaultResult;
+    }
+
+    payLine3(): WinResult {
+        const defaultResult: WinResult = {
+            isWin: false,
+            winningSymbols: [],
+            winAmount: 0,
+            winningPayline: -1
+        };
+
+        const bottomRow = this.screen[2];
+
+        let consecutiveSymbols: string[] = [bottomRow[0]];
+
+        for (let i = 1; i < bottomRow.length; i++) {
+            if (bottomRow[i] === consecutiveSymbols[0]) {
+                consecutiveSymbols.push(bottomRow[i]);
+            }else {
+                break;
+            }
+        }
+
+        if (consecutiveSymbols.length >= 3) {
+            const winSymbol = consecutiveSymbols[0];
+            const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+            return {
+                isWin: true,
+                winningSymbols: consecutiveSymbols,
+                winAmount: winAmount,
+                winningPayline: 3 // middle row
+            };
+        }
+        return defaultResult;
     }
 
     // Method to get the reels array
@@ -426,9 +569,11 @@ export class Reels {
     getContainer(): Container {
         return this.containerGrid;
     }
-
     // Method to get the current screen result
     getScreenResult(): string[][] {
         return this.screen;
+    }
+    getPayTable(): { [key: string]: { [key: number]: number } } {
+        return this.payTable;
     }
 }
