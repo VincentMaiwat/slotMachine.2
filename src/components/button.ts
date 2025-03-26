@@ -7,9 +7,7 @@ import {
     Assets,
     TickerCallback
 } from 'pixi.js';
-import { Balance } from './balance';
 import { AssetLoader } from '../utils/assetLoader';
-import { Cynda } from './cyndaquil';
 
 export class Button {
     private app: Application;
@@ -26,19 +24,12 @@ export class Button {
     private isInteractive: boolean = true;
     private isPulsing: boolean = true;
 
-    private balanceManager?: Balance;
-    private changeCynda?: Cynda;
-
     constructor(app: Application) {
         this.app = app;
         this.container = new Container();
         this.app.stage.addChild(this.container);
 
         window.addEventListener('resize', this.handleResize.bind(this));
-    }
-
-    public connectCynda(cynda: Cynda): void {
-        this.changeCynda = cynda;
     }
 
     private handleResize(): void {
@@ -132,9 +123,6 @@ export class Button {
         // Add the ticker callback
         this.app.ticker.add(this.tickerCallback);
     }
-    public connectBalance(balance: Balance): void {
-        this.balanceManager = balance;
-    }
 
 
     // Method to set click callback
@@ -145,14 +133,6 @@ export class Button {
     private onClick = async () => {
         if (this.onClickCallback) {
             this.onClickCallback();
-        }
-
-        if (this.balanceManager) {
-            this.balanceManager.deductBalance(5);
-        }
-
-        if (this.changeCynda) {
-            this.changeCynda.showCyndaF();
         }
 
         // Change interactivity
@@ -188,9 +168,6 @@ export class Button {
         this.isInteractive = true;
         this.isPulsing = true;
 
-        if (this.changeCynda) {
-            this.changeCynda.showCynda();
-        }
 
         try {
             // Load original image

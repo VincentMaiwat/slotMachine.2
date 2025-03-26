@@ -10,7 +10,7 @@ export class Balance {
     private containerCoins: Container;
     private pokeball: string = 'assets/images/pokeball.png';
     private rectCoins = new Graphics();
-
+    private currentBal?: number;
 
     private balance: { value: number } = { value: 1000 };
 
@@ -37,19 +37,26 @@ export class Balance {
         window.addEventListener('resize', this.handleResize.bind(this));
     }
 
-    // Add these methods to update balance
-    public deductBalance(amount: number): void {
-        this.balance.value -= amount;
-
-        // Update the displayed text
-        this.txtCoins.text = this.balance.value.toString();
-
+    private setBalance(amount:number): void {
+        this.balance.value = amount;
     }
 
-    public addBalance(amount: number): void {
-        this.balance.value += amount;
+    public deductBalance() {
+        this.currentBal = this.balance.value - 5;
         // Update the displayed text
-        this.txtCoins.text = this.balance.value.toString();
+        this.txtCoins.text = this.currentBal;
+        this.setBalance(this.currentBal);
+
+        return this.currentBal;
+    }
+
+    public addBalance(amount: number) {
+        this.currentBal = this.balance.value + amount;
+        // Update the displayed text
+        this.txtCoins.text = this.currentBal;
+
+        this.setBalance(this.currentBal)
+        return this.currentBal;
     }
     // Getter for current balance
     public getBalance(): number {

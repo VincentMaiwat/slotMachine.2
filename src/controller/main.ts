@@ -43,7 +43,7 @@ async function main() {
 
   const connectCynda = await Cynda.create(app);
 
-  await Winnings.create(app);
+  const winnings = await Winnings.create(app);
 
   const manageBalance = await Balance.create(app);
 
@@ -51,11 +51,21 @@ async function main() {
   const button = await Button.create(app);
 
   button.setClickCallback(() => {
+    winnings.resetWinnings(); // Reset winnings to 0 on spin click
+    manageBalance.deductBalance(); // Deduct 5 on balance on spin click
+    connectCynda.showCyndaF(); // Show pokemon on click
+
     reels.spin(() => {
-      button.reset();
-  });
-    button.connectBalance(manageBalance);
-    button.connectCynda(connectCynda);
+      button.reset(); // After reel spin, reset the button to spin
+      connectCynda.showCynda(); // reset the pokemon
+    },
+
+    (wins) => {
+      const totalWinAmount = wins.reduce((sum,win) => sum + win.winAmount, 0);
+      winnings.addWinnings(totalWinAmount);
+      manageBalance.addBalance(totalWinAmount);
+    }
+);
   });
 
 }
