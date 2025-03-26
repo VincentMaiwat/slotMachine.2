@@ -1,5 +1,6 @@
 //winnings.ts
 import { Application, Assets, Container, Graphics, Sprite, Texture, Text, TextStyle } from "pixi.js";
+import { Reels } from "./reels";
 
 export class Winnings {
     private app: Application;
@@ -9,6 +10,8 @@ export class Winnings {
     private containerWins: Container;
     private plus: string = 'assets/images/plus.png';
     private rectWins = new Graphics();
+    private reels = Reels;
+
 
     private winnings: { value: number } = { value: 0 };
 
@@ -42,10 +45,17 @@ export class Winnings {
 
     }
 
-    public addWinnings(amount: number): void {
-        this.winnings.value += amount;
+    public addWinnings(amount: number) {
+        const winnings = this.winnings.value + amount;
         // Update the displayed text
-        this.txtWins.text = this.winnings.value.toString();
+        this.txtWins.text = winnings;
+
+        return winnings;
+    }
+
+    public resetWinnings(): void{
+        this.winnings.value = 0;
+        this.txtWins.text = 0;
     }
 
     static async create(app: Application): Promise<Winnings>{

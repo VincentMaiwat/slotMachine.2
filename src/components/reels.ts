@@ -1,3 +1,4 @@
+//reels.ts
 import {
     Application,
     Container,
@@ -40,7 +41,7 @@ export class Reels {
 
     // Predefined symbol sequences for each reel
     private reelSet: string[][] = [
-        [ "hv2", "lv3", "lv3", "hv1", "hv1", "lv1", "hv1", "hv4", "lv1", "hv3", "hv2", "hv3", "lv4", "hv4", "lv1", "hv2", "lv4", "lv1", "lv3", "hv2" ],
+        [ "hv2", "lv3", "lv3", "hv1", "hv1", "lv1", "hv1", "hv4", "lv1", "hv3", "hv2", "hv3", "lv4", "hv4", "lv1", "hv2", "lv4", "lv1", "lv3", "hv2" ], // 0-19
         [ "hv1", "lv2", "lv3", "lv2", "lv1", "lv1", "lv4", "lv1", "lv1", "hv4", "lv3", "hv2", "lv1", "lv3", "hv1", "lv1", "lv2", "lv4", "lv3", "lv2" ],
         [ "lv1", "hv2", "lv3", "lv4", "hv3", "hv2", "lv2", "hv2", "hv2", "lv1", "hv3", "lv1", "hv1", "lv2", "hv3", "hv2", "hv4", "hv1", "lv2", "lv4" ],
         [ "hv2", "lv2", "hv3", "lv2", "lv4", "lv4", "hv3", "lv2", "lv4", "hv1", "lv1", "hv1", "lv2", "hv3", "lv2", "lv3", "hv2", "lv1", "hv3", "lv2" ],
@@ -296,14 +297,22 @@ export class Reels {
     }
 
     // Method to spin the reels
-    spin(onComplete?: () => void): void {
+    spin(onComplete?: () => void, onWin?:(wins: WinResult[])=> void): void {
         if (this.isRunning) return;
         this.isRunning = true;
 
         let reelsCompleted = 0;
 
-        // uncomment this to check if pay line 1 works
-        this.targetReelPositions = [1, 18, 10, 7, 3];
+        // uncomment this to check if particular pay line works
+        // this.targetReelPositions = [2, 19, 11, 8, 4]; // // payline 1 mid
+        this.targetReelPositions = [0, 11, 1, 10, 14]; // multiple paylines
+        // this.targetReelPositions = [3, 20, 12, 9, 5];         // payline 2 top
+        // this.targetReelPositions = [1, 18, 10, 7, 3];         // payline 3 bot
+        // this.targetReelPositions = [3, 20, 11, 7, 3];         // payline 4 up-down diagonal
+        // this.targetReelPositions = [1, 18, 11, 9, 5];        // payline 5 down-up diagonal
+        // this.targetReelPositions = [3, 19, 10, 8, 5];        // payline 6 V
+        // this.targetReelPositions = [1, 19, 12, 8, 3];        // payline 7 inverted V
+
 
         // Generate a random outcome before spin starts
         // this.targetReelPositions = this.generateRandomOutcome();
@@ -421,31 +430,27 @@ export class Reels {
                                 // Update the screen array
                                 this.updateScreenArray();
 
-                                // FOR WINNING
-                                // Check for winnings
-                                const payLine1 = this.payLine1();
-                                const payLine3 = this.payLine3();
-                                const payLine2 = this.payLine2();
+                                const wins = this.checkAllPaylines();
 
-                                // Log win information
-                                if (payLine1.isWin) {
-                                    console.log("WIN!");
-                                    console.log("Winning Symbols:", payLine1.winningSymbols);
-                                    console.log("Win Amount:", payLine1.winAmount);
-                                }
-                                if(payLine3.isWin){
-                                    console.log("WIN!");
-                                    console.log("Winning Symbols:", payLine3.winningSymbols);
-                                    console.log("Win Amount:", payLine3.winAmount);
-                                }
-                                if(payLine2.isWin) {
-                                    console.log("WIN!");
-                                    console.log("Winning Symbols:", payLine2.winningSymbols);
-                                    console.log("Win Amount:", payLine2.winAmount);
+                                // Handle wins
+                                if (wins.length > 0) {
+                                    if (onWin){
+                                        onWin(wins);
+                                    }
+
+                                    console.log("YOU WIN!");
+                                    wins.forEach(win => {
+                                        console.log("Winning Symbols:", win.winningSymbols);
+                                        console.log("Win Amount:", win.winAmount);
+                                        console.log("Winning Line:", win.winningPayline);
+
+                                    });
+
+
                                 }
 
                                 // Call the completion callback if provided
-                                // if (onComplete) onComplete();
+                                if (onComplete) onComplete();
                             }
                         }
                     }
@@ -454,117 +459,366 @@ export class Reels {
         }
     }
 
-     // FOR WINNING
-     payLine2(): WinResult {
-        // Default result: no win
-        const defaultResult: WinResult = {
-            isWin: false,
-            winningSymbols: [],
-            winAmount: 0,
-            winningPayline: -1
-        };
+    // In reels.ts, add this method
+private checkAllPaylines(): WinResult[] {
+    const wins: WinResult[] = [];
 
-        // Get the top row
-        const topRow = this.screen[0];
+    // Payline 1: Middle Row (Horizontal)
+    const payLine1 = this.checkHorizontalPayline(1);
+    if (payLine1.isWin) wins.push(payLine1);
 
-        // get the left-most symbol
-        let consecutiveSymbols: string[] = [topRow[0]];
+    // Payline 2: Top Row (Horizontal)
+    const payLine2 = this.checkHorizontalPayline(0);
+    if (payLine2.isWin) wins.push(payLine2);
 
-        // Check for consecutive matching symbols from left to right
-        for (let i = 1; i < topRow.length; i++) {
-            if (topRow[i] === consecutiveSymbols[0]) {
-                consecutiveSymbols.push(topRow[i]);
-            }else {
-                break;
-            }
+    // Payline 3: Bottom Row (Horizontal)
+    const payLine3 = this.checkHorizontalPayline(2);
+    if (payLine3.isWin) wins.push(payLine3);
+
+    // Payline 4: Diagonal (Up-Down)
+    const payLine4 = this.checkDiagonalPayline(true);
+    if (payLine4.isWin) wins.push(payLine4);
+
+    // Payline 5: Diagonal (Down-Up)
+    const payLine5 = this.checkDiagonalPayline(false);
+    if (payLine5.isWin) wins.push(payLine5);
+
+    const payLine6 = this.checkVPayline(true);
+    if (payLine6.isWin) wins.push(payLine6);
+
+    const payLine7 = this.checkVPayline(false);
+    if (payLine7.isWin) wins.push(payLine7);
+
+    return wins;
+}
+
+private checkHorizontalPayline(row: number): WinResult {
+
+    const paylineMapping = {
+        0 : 2, // Top row is payline 2
+        1: 1, // Middle row is payline 1
+        2: 3  // Bottom row is payline 3
+    };
+
+    const defaultResult: WinResult = {
+        isWin: false,
+        winningSymbols: [],
+        winAmount: 0,
+        winningPayline: -1
+    };
+
+    const targetRow = this.screen[row];
+    let consecutiveSymbols: string[] = [targetRow[0]];
+
+    for (let i = 1; i < targetRow.length; i++) {
+        if (targetRow[i] === consecutiveSymbols[0]) {
+            consecutiveSymbols.push(targetRow[i]);
+            // Find and pulse the winning symbols
+        } else {
+            break;
         }
-        // Check if 3 consecutive symbol is present
-        if (consecutiveSymbols.length >= 3) {
-            const winSymbol = consecutiveSymbols[0];
-            const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
-
-            return {
-                isWin: true,
-                winningSymbols: consecutiveSymbols,
-                winAmount: winAmount,
-                winningPayline: 2
-            };
-        }
-        return defaultResult;
     }
 
-     payLine1(): WinResult {
-        const defaultResult: WinResult = {
-            isWin: false,
-            winningSymbols: [],
-            winAmount: 0,
-            winningPayline: -1
+    if (consecutiveSymbols.length >= 3) {
+        const winSymbol = consecutiveSymbols[0];
+        const winAmount = (this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+        return {
+            isWin: true,
+            winningSymbols: consecutiveSymbols,
+            winAmount: winAmount,
+            winningPayline: paylineMapping[row]
         };
+    }
+    return defaultResult;
+}
 
-        const middleRow = this.screen[1];
+private checkDiagonalPayline(upToDown: boolean): WinResult {
+    const defaultResult: WinResult = {
+        isWin: false,
+        winningSymbols: [],
+        winAmount: 0,
+        winningPayline: -1
+    };
 
-        let consecutiveSymbols: string[] = [middleRow[0]];
+    const rows = this.screen;
+    const winningSymbols: string[] = [];
 
-        for (let i = 1; i < middleRow.length; i++) {
-            if (middleRow[i] === consecutiveSymbols[0]) {
-                consecutiveSymbols.push(middleRow[i]);
-            }else {
-                break;
+    // Diagonal pattern check
+    if (upToDown) {
+        if (rows[0][0] === rows[0][1] ) {
+            winningSymbols.push(rows[0][0], rows[0][1]);
+
+            if (rows[0][1] === rows[1][2]){
+                winningSymbols.push(rows[1][2]);
+
+                if (rows[1][2] === rows[2][3]){
+                    winningSymbols.push(rows[2][3]);
+
+                    if (rows[2][3] === rows[2][4]){
+                        winningSymbols.push(rows[2][4]);
+                    }
+                }
             }
         }
-        if (consecutiveSymbols.length >= 3) {
-            const winSymbol = consecutiveSymbols[0];
-            const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+    } else {
+        if (rows[2][0] === rows[2][1] ) {
+            winningSymbols.push(rows[2][0], rows[2][1]);
 
-            return {
-                isWin: true,
-                winningSymbols: consecutiveSymbols,
-                winAmount: winAmount,
-                winningPayline: 1 // middle row
-            };
-        }
-        return defaultResult;
-    }
+            if (rows[2][1] === rows[1][2]){
+                winningSymbols.push(rows[1][2]);
 
-    payLine3(): WinResult {
-        const defaultResult: WinResult = {
-            isWin: false,
-            winningSymbols: [],
-            winAmount: 0,
-            winningPayline: -1
-        };
+                if (rows[1][2] === rows[0][3]){
+                    winningSymbols.push(rows[0][3]);
 
-        const bottomRow = this.screen[2];
-
-        let consecutiveSymbols: string[] = [bottomRow[0]];
-
-        for (let i = 1; i < bottomRow.length; i++) {
-            if (bottomRow[i] === consecutiveSymbols[0]) {
-                consecutiveSymbols.push(bottomRow[i]);
-            }else {
-                break;
+                    if (rows[0][3] === rows[0][4]){
+                        winningSymbols.push(rows[0][4]);
+                    }
+                }
             }
         }
-
-        if (consecutiveSymbols.length >= 3) {
-            const winSymbol = consecutiveSymbols[0];
-            const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
-
-            return {
-                isWin: true,
-                winningSymbols: consecutiveSymbols,
-                winAmount: winAmount,
-                winningPayline: 3 // middle row
-            };
-        }
-        return defaultResult;
     }
+
+    if (winningSymbols.length >= 3) {
+        const winSymbol = winningSymbols[0];
+        const winAmount = (this.payTable[winSymbol][winningSymbols.length]) || 0;
+
+        return {
+            isWin: true,
+            winningSymbols: winningSymbols,
+            winAmount: winAmount,
+            winningPayline: upToDown ? 4 : 5
+        };
+    }
+
+
+    return defaultResult;
+}
+
+private checkVPayline(normalV: boolean): WinResult {
+    const defaultResult: WinResult = {
+        isWin: false,
+        winningSymbols: [],
+        winAmount: 0,
+        winningPayline: -1
+    };
+
+    const rows = this.screen;
+    const winningSymbols: string[] = [];
+
+    if (normalV) {
+        if (rows[0][0] === rows[1][1] ) {
+            winningSymbols.push(rows[0][0], rows[1][1]);
+
+            if (rows[1][1] === rows[2][2]){
+                winningSymbols.push(rows[2][2]);
+
+                if (rows[2][2] === rows[1][3]){
+                    winningSymbols.push(rows[1][3]);
+
+                    if (rows[1][3] === rows[0][4]){
+                        winningSymbols.push(rows[0][4]);
+                    }
+                }
+            }
+        }
+    } else {
+        if (rows[2][0] === rows[1][1] ) {
+            winningSymbols.push(rows[2][0], rows[1][1]);
+
+            if (rows[1][1] === rows[0][2]){
+                winningSymbols.push(rows[0][2]);
+
+                if (rows[0][2] === rows[1][3]){
+                    winningSymbols.push(rows[1][3]);
+
+                    if (rows[1][3] === rows[2][4]){
+                        winningSymbols.push(rows[2][4]);
+                    }
+                }
+            }
+        }
+    }
+
+    if (winningSymbols.length >= 3) {
+        const winSymbol = winningSymbols[0];
+        const winAmount = (this.payTable[winSymbol][winningSymbols.length]) || 0;
+
+        return {
+            isWin: true,
+            winningSymbols: winningSymbols,
+            winAmount: winAmount,
+            winningPayline: normalV ? 6 : 7
+        };
+    }
+    return defaultResult;
+}
+
+    //  // FOR WINNING
+    //  payLine1(): WinResult {
+    //     const defaultResult: WinResult = {
+    //         isWin: false,
+    //         winningSymbols: [],
+    //         winAmount: 0,
+    //         winningPayline: -1
+    //     };
+
+    //     const middleRow = this.screen[1];
+
+    //     let consecutiveSymbols: string[] = [middleRow[0]];
+
+    //     for (let i = 1; i < middleRow.length; i++) {
+    //         if (middleRow[i] === consecutiveSymbols[0]) {
+    //             consecutiveSymbols.push(middleRow[i]);
+    //         }else {
+    //             break;
+    //         }
+    //     }
+    //     if (consecutiveSymbols.length >= 3) {
+    //         const winSymbol = consecutiveSymbols[0];
+    //         const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+    //         return {
+    //             isWin: true,
+    //             winningSymbols: consecutiveSymbols,
+    //             winAmount: winAmount,
+    //             winningPayline: 1 // middle row
+    //         };
+    //     }
+    //     return defaultResult;
+    // }
+
+    //  payLine2(): WinResult {
+    //     // Default result: no win
+    //     const defaultResult: WinResult = {
+    //         isWin: false,
+    //         winningSymbols: [],
+    //         winAmount: 0,
+    //         winningPayline: -1
+    //     };
+
+    //     // Get the top row
+    //     const topRow = this.screen[0];
+
+    //     // get the left-most symbol
+    //     let consecutiveSymbols: string[] = [topRow[0]];
+
+    //     // Check for consecutive matching symbols from left to right
+    //     for (let i = 1; i < topRow.length; i++) {
+    //         if (topRow[i] === consecutiveSymbols[0]) {
+    //             consecutiveSymbols.push(topRow[i]);
+    //         }else {
+    //             break;
+    //         }
+    //     }
+    //     // Check if 3 consecutive symbol is present
+    //     if (consecutiveSymbols.length >= 3) {
+    //         const winSymbol = consecutiveSymbols[0];
+    //         const winAmount = (this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+    //         return {
+    //             isWin: true,
+    //             winningSymbols: consecutiveSymbols,
+    //             winAmount: winAmount,
+    //             winningPayline: 2
+    //         };
+    //     }
+    //     return defaultResult;
+    // }
+
+    // payLine3(): WinResult {
+    //     const defaultResult: WinResult = {
+    //         isWin: false,
+    //         winningSymbols: [],
+    //         winAmount: 0,
+    //         winningPayline: -1
+    //     };
+
+    //     const bottomRow = this.screen[2];
+
+    //     let consecutiveSymbols: string[] = [bottomRow[0]];
+
+    //     for (let i = 1; i < bottomRow.length; i++) {
+    //         if (bottomRow[i] === consecutiveSymbols[0]) {
+    //             consecutiveSymbols.push(bottomRow[i]);
+    //         }else {
+    //             break;
+    //         }
+    //     }
+
+    //     if (consecutiveSymbols.length >= 3) {
+    //         const winSymbol = consecutiveSymbols[0];
+    //         const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][consecutiveSymbols.length]) || 0;
+
+    //         return {
+    //             isWin: true,
+    //             winningSymbols: consecutiveSymbols,
+    //             winAmount: winAmount,
+    //             winningPayline: 3 // middle row
+    //         };
+    //     }
+    //     return defaultResult;
+    // }
+    // payline4(): WinResult {
+    //     const defaultResult: WinResult = {
+    //         isWin: false,
+    //         winningSymbols: [],
+    //         winAmount: 0,
+    //         winningPayline: -1
+    //     };
+
+    //     const topRow = this.screen[0];
+    //     const midRow = this.screen[1];
+    //     const bottomRow = this.screen[2];
+
+    //     // Check first two symbols in top row
+    //     let topSymbols: string[] = [topRow[0]];
+    //     for (let i = 1; i < 2; i++) {
+    //         if (topRow[i] === topSymbols[0]) {
+    //             topSymbols.push(topRow[i]);
+    //         } else {
+    //             break;
+    //         }
+    //     }
+
+    //     // If first two top row symbols match
+    //     if (topSymbols.length === 2) {
+    //         // Check middle row symbol
+    //         if (midRow[2] === topSymbols[0]) {
+    //             // Check last two bottom row symbols
+    //             let bottomSymbols: string[] = [bottomRow[3]];
+    //             for (let i = 4; i < topRow.length; i++) {
+    //                 if (bottomRow[i] === bottomSymbols[0]) {
+    //                     bottomSymbols.push(bottomRow[i]);
+    //                 } else {
+    //                     break;
+    //                 }
+    //             }
+
+    //             // Validate complete pattern
+    //             if (bottomSymbols.length === 2) {
+    //                 // Calculate win amount
+    //                 const winSymbol = topSymbols[0];
+    //                 const winningSymbols = [...topSymbols, midRow[2], ...bottomSymbols];
+    //                 const winAmount = (this.payTable[winSymbol] && this.payTable[winSymbol][winningSymbols.length]) || 0;
+
+    //                 return {
+    //                     isWin: true,
+    //                     winningSymbols: winningSymbols,
+    //                     winAmount: winAmount,
+    //                     winningPayline: 4 // specific payline number
+    //                 };
+    //             }
+    //         }
+    //     }
+
+    //     return defaultResult;
+    // }
 
     // Method to get the reels array
     getReels(): Reel[] {
         return this.reels;
     }
-
     // Method to get the container
     getContainer(): Container {
         return this.containerGrid;
