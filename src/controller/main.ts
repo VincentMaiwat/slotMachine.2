@@ -11,6 +11,7 @@ import { Winnings } from "../components/winnings";
 import { Cynda } from "../components/cyndaquil";
 import { gsap } from "gsap";
 import {Howl} from 'howler';
+import { WinDisplay } from "../utils/displayWins";
 
 async function main() {
   // Create and initialize application
@@ -47,6 +48,8 @@ async function main() {
 
   const manageBalance = await Balance.create(app);
 
+  const winDisplay = new WinDisplay(app);
+
   // Create button and connect to reels
   const button = await Button.create(app);
 
@@ -54,6 +57,7 @@ async function main() {
     winnings.resetWinnings(); // Reset winnings to 0 on spin click
     manageBalance.deductBalance(); // Deduct 5 on balance on spin click
     connectCynda.showCyndaF(); // Show pokemon on click
+    winDisplay.hideWin();
 
     reels.spin(() => {
       button.reset(); // After reel spin, reset the button to spin
@@ -62,6 +66,11 @@ async function main() {
 
     (wins) => {
       const totalWinAmount = wins.reduce((sum,win) => sum + win.winAmount, 0);
+
+      if (totalWinAmount > 0) {
+        // Display win information
+        winDisplay.displayWin(wins[0], reels.getTextureMap());
+      }
       winnings.addWinnings(totalWinAmount);
       manageBalance.addBalance(totalWinAmount);
     }

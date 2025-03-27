@@ -20,7 +20,7 @@ interface Reel {
 }
 
 // For winning
-interface WinResult {
+export interface WinResult {
     isWin: boolean;
     winningSymbols: string;
     winAmount: number;
@@ -39,7 +39,11 @@ export class Reels {
     private symbolsPerReel: number = 3;
     private isRunning: boolean = false;
     private mask?: Graphics;
-    private winningSymbolAnimations: gsap.core.Tween[] = [];
+    // private winningSymbolAnimations: gsap.core.Tween[] = [];
+    private winningSymbolAnimations: { 
+        symbol: Sprite, 
+        animation: gsap.core.Tween 
+    }[] = [];
 
     // Predefined symbol sequences for each reel
     private reelSet: string[][] = [
@@ -302,9 +306,9 @@ export class Reels {
 
     // Method to spin the reels
     spin(onComplete?: () => void, onWin?:(wins: WinResult[])=> void): void {
+        this.clearWinningSymbolAnimations();
         if (this.isRunning) return;
 
-        this.removeWinningSymbolAnimation();
         this.isRunning = true;
 
         let reelsCompleted = 0;
@@ -573,9 +577,11 @@ export class Reels {
     private applyWinningSymbolAnimation(winResult: WinResult) {
         if (!winResult.isWin) return;
 
+        this.clearWinningSymbolAnimations();
+
         // Kill any existing animations first
-        this.winningSymbolAnimations.forEach(animation => animation.kill());
-        this.winningSymbolAnimations = [];
+        // this.winningSymbolAnimations.forEach(animation => animation.kill());
+        // this.winningSymbolAnimations = [];
 
         winResult.winningCoordinates.forEach(([row, col]) => {
             // Find the reel and the specific symbol within that reel
@@ -584,34 +590,31 @@ export class Reels {
             const winningSymbol = reel.symbols[symbolIndex];
 
             if (winningSymbol) {
-                this.pulseSymbol(winningSymbol);
+                const animation = this.pulseSymbol(winningSymbol);
+                this.winningSymbolAnimations.push({symbol: winningSymbol, animation});
+                
             }
         });
     }
+    private clearWinningSymbolAnimations(): void {
+        this.winningSymbolAnimations.forEach(({ symbol, animation }) => {
+            // Kill the animation
+            animation.kill();
 
-    private removeWinningSymbolAnimation() {
-        // Stop and clear any existing animations
-        this.winningSymbolAnimations.forEach(animation => animation.kill());
-        this.winningSymbolAnimations = [];
-
-        // Reset all symbols to their original scale
-        this.reels.forEach(reel => {
-            reel.symbols.forEach(symbol => {
-                // Restore the original scale
-                gsap.to(symbol.scale, {
-                    x: symbol.scale.x / 1.1,
-                    y: symbol.scale.y / 1.1,
-                    duration: 0.3,
-                    ease: "power1.inOut"
-                });
-            });
+            // Reset the symbol's scale to original
+            const originalScaleX = symbol.scale.x / 1.1;
+            const originalScaleY = symbol.scale.y / 1.1;
+            symbol.scale.set(originalScaleX, originalScaleY);
         });
+
+        // Clear the animations array
+        this.winningSymbolAnimations = [];
     }
 
-    private pulseSymbol(sprite: Sprite) {
+    private pulseSymbol(sprite: Sprite): gsap.core.Tween {
         const originalScaleX = sprite.scale.x;
         const originalScaleY = sprite.scale.y;
-        gsap.to(sprite.scale, {
+        return gsap.to(sprite.scale, {
             x: originalScaleY * 1.1,
             y: originalScaleX * 1.1,
             duration: 1,
@@ -636,5 +639,8 @@ export class Reels {
     }
     getPayTable(): { [key: string]: { [key: number]: number } } {
         return this.payTable;
+    }
+    getTextureMap(): Map<string, Texture> {
+        return this.textureMap;
     }
 }
