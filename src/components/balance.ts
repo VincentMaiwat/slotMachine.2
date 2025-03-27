@@ -15,7 +15,6 @@ export class Balance {
     private balance: { value: number } = { value: 1000 };
 
     constructor (app: Application){
-        console.log("check ");
         this.app = app;
 
         // Container for balance
