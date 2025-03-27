@@ -157,7 +157,7 @@ export class AssetLoader {
             'assets/images/s2.png', //9
             'assets/images/s3.png', //10
             'assets/images/s4.png', //11
-            'assets/images/SLOT.png',   
+            'assets/images/SLOT.png',
             'assets/images/spin.png',
             'assets/images/gl.png',
             'assets/images/back.png',
@@ -208,6 +208,7 @@ export class AssetLoader {
         this.backTexture = bundle["back"];
         this.cyndaTexture = bundle["cyndaquil"];
         this.cyndaFTexture = bundle["cyndaquil-fire"];
+
     }
 
     public static getTextures(): Texture[] {
