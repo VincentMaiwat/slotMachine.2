@@ -1,4 +1,3 @@
-//main.ts
 import { Application, Container} from "pixi.js";
 import { BackgroundSettings } from "../scenes/background";
 import { initDevtools } from '@pixi/devtools';

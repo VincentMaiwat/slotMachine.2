@@ -1,4 +1,3 @@
-//winnings.ts
 import { Application, Assets, Container, Graphics, Sprite, Texture, Text, TextStyle } from "pixi.js";
 import { Reels } from "./reels";
 
@@ -91,11 +90,11 @@ export class Winnings {
         this.rectWins.stroke({width: 2, color:0x56ff74});
 
         this.txtWins.anchor.set(0.5);
-        this.txtWins.x = 150;
+        this.txtWins.x = 160;
         this.txtWins.y = this.rectWins.height/2;
 
         this.txtLabel.anchor.set(0.5);
-        this.txtLabel.x =((this.rectWins.width - this.txtLabel.width) - this.txtWins.width)/2;
+        this.txtLabel.x =((this.rectWins.width - this.txtLabel.width) + this.txtWins.width)/2;
         this.txtLabel.y = this.rectWins.height/2 ;
 
         this.containerWins.position.set(140,280);

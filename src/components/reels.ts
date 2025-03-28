@@ -1,12 +1,4 @@
-//reels.ts
-import {
-    Application,
-    Container,
-    Graphics,
-    Sprite,
-    Texture,
-    BlurFilter
-} from 'pixi.js';
+import {Application, Container, Graphics, Sprite, Texture, BlurFilter} from 'pixi.js';
 import { AssetLoader } from '../utils/assetLoader';
 import { gsap } from "gsap";
 
@@ -39,11 +31,8 @@ export class Reels {
     private symbolsPerReel: number = 3;
     private isRunning: boolean = false;
     private mask?: Graphics;
-    // private winningSymbolAnimations: gsap.core.Tween[] = [];
-    private winningSymbolAnimations: {
-        symbol: Sprite,
-        animation: gsap.core.Tween
-    }[] = [];
+
+    private winningSymbolAnimations: {symbol: Sprite, animation: gsap.core.Tween}[] = []; // Array for animations
 
     // Predefined symbol sequences for each reel
     private reelSet: string[][] = [
@@ -97,7 +86,6 @@ export class Reels {
 
     async initialize(): Promise<void> {
         this.setupContainerGrid();
-
         this.slotTextures = AssetLoader.getTextures();
 
         // Setup texture mapping for symbols
@@ -110,13 +98,9 @@ export class Reels {
         this.textureMap.set("hv3", this.slotTextures[10]);  // violet spiky/GENGAR
         this.textureMap.set("hv4", this.slotTextures[11]);  // orange pig/TEPIG
 
-        // Initialize reel positions
         this.setInitialState();
-
         this.createReels();
-
         this.app.stage.addChild(this.containerGrid);
-
         this.updateScreenArray();
     }
 
@@ -351,11 +335,6 @@ export class Reels {
             const totalSymbols = this.reelSet[i].length;
             const reelIndex = i;
 
-        //     gsap.killTweensOf(reel.blur);
-        // reel.symbols.forEach(symbol => {
-        //     gsap.killTweensOf(symbol);
-        // });
-
             gsap.to(reel.blur, {
                 blurY: 5,
                 duration: 0.1
@@ -462,7 +441,6 @@ export class Reels {
                                     this.applyWinningSymbolAnimation(combinedWin);
                                 }
 
-                                // Call the completion callback if provided
                                 if (onComplete) onComplete();
                             }
                         }
@@ -472,22 +450,20 @@ export class Reels {
         }
     }
 
+    // Function to set the winning requirements
     private checkAllPaylines(): WinResult {
+        // Coordinates of each pattern
         const paylines = [
-            // Horizontal paylines
             { line: [[0,0], [0,1], [0,2], [0,3], [0,4]], number: 2 }, // Top row
             { line: [[1,0], [1,1], [1,2], [1,3], [1,4]], number: 1 }, // Middle row
             { line: [[2,0], [2,1], [2,2], [2,3], [2,4]], number: 3 }, // Bottom row
-
-            // Diagonal paylines
             { line: [[0,0], [0,1], [1,2], [2,3], [2,4]], number: 4 }, // Up-down diagonal
             { line: [[2,0], [2,1], [1,2], [0,3], [0,4]], number: 5 }, // Down-up diagonal
-
-            // V-shaped paylines
             { line: [[0,0], [1,1], [2,2], [1,3], [0,4]], number: 6 }, // Normal V
             { line: [[2,0], [1,1], [0,2], [1,3], [2,4]], number: 7 }  // Inverted V
         ];
 
+        // Initiate an array for the result
         const wins: WinResult[] = [];
 
         for (const payline of paylines) {
@@ -500,6 +476,7 @@ export class Reels {
         return this.combineWins(wins);
     }
 
+    // Function to check if symbols fill the pattern
     private checkPaylineWin(payline: number[][], paylineNumber: number): WinResult {
         const defaultResult: WinResult = {
             isWin: false,
@@ -542,6 +519,7 @@ export class Reels {
         return defaultResult;
     }
 
+    // Function to combine details of winning symbols for display purposes
     private combineWins(wins: WinResult[]): WinResult {
         if (wins.length === 0) {
             return {
@@ -556,11 +534,11 @@ export class Reels {
         // Combine winning symbols
         const combinedSymbols = wins.map(win => win.winningSymbols).join(" and ");
 
-        // Sum up total win amount
+        // Sum of amount
         const totalWinAmount = wins.reduce((sum, win) => sum + win.winAmount, 0);
 
         // Combine paylines
-        const combinedPaylines = ("Lines " + (wins.map(win => win.winningPayline).join(" and ")));
+        const combinedPaylines = ("Line " + (wins.map(win => win.winningPayline).join(" and ")));
 
         // Combine winning coordinates
         const combinedCoordinates = wins.reduce((acc: number[][], win: WinResult) =>
@@ -574,17 +552,15 @@ export class Reels {
         };
     }
 
+    // Function to highlight winning symbols thru animation
     private applyWinningSymbolAnimation(winResult: WinResult) {
         if (!winResult.isWin) return;
 
+        // Kill any existing animations first
         this.clearWinningSymbolAnimations();
 
-        // Kill any existing animations first
-        // this.winningSymbolAnimations.forEach(animation => animation.kill());
-        // this.winningSymbolAnimations = [];
-
+        // Find the reel and the specific symbol within that reel
         winResult.winningCoordinates.forEach(([row, col]) => {
-            // Find the reel and the specific symbol within that reel
             const reel = this.reels[col];
             const symbolIndex = (this.reelPositions[col] + row) % reel.symbols.length;
             const winningSymbol = reel.symbols[symbolIndex];
@@ -592,10 +568,11 @@ export class Reels {
             if (winningSymbol) {
                 const animation = this.pulseSymbol(winningSymbol);
                 this.winningSymbolAnimations.push({symbol: winningSymbol, animation});
-
             }
         });
     }
+
+    // Function to clear animations
     private clearWinningSymbolAnimations(): void {
         this.winningSymbolAnimations.forEach(({ symbol, animation }) => {
             // Kill the animation
@@ -611,19 +588,32 @@ export class Reels {
         this.winningSymbolAnimations = [];
     }
 
-    private pulseSymbol(sprite: Sprite): gsap.core.Tween {
+    // Animation to make symbols pulse
+    private pulseSymbol(sprite: Sprite): gsap.core.Timeline {
         const originalScaleX = sprite.scale.x;
         const originalScaleY = sprite.scale.y;
-        return gsap.to(sprite.scale, {
-            x: originalScaleY * 1.1,
-            y: originalScaleX * 1.1,
-            duration: 1,
-            yoyo: true,
-            repeat: -1,
-            ease: "power1.inOut"
-        });
-    }
 
+        return gsap.timeline({repeat: -1,
+            repeatDelay: 0.7})
+            .to(sprite.scale, {
+                x: originalScaleX,
+                y: originalScaleY,
+                duration: 0.3,
+                ease: "power1.out"
+            })
+            .to(sprite.scale, {
+                x: originalScaleX * 1.1,
+                y: originalScaleY * 1.1,
+                duration: 1,
+                ease: "power1.inOut"
+            })
+            .to(sprite.scale, {
+                x: originalScaleX,
+                y: originalScaleY,
+                duration: 0.3,
+                ease: "power1.in"
+            });
+    }
 
     // Method to get the reels array
     getReels(): Reel[] {

@@ -1,4 +1,3 @@
-// Cyndaquil.ts
 import { Application, Assets, Container, Sprite, Texture} from "pixi.js";
 import { AssetLoader } from "../utils/assetLoader";
 import { gsap } from "gsap/gsap-core";

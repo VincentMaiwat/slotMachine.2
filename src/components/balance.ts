@@ -1,4 +1,3 @@
-//balance.ts
 import { Application, Assets, Container, Graphics, Sprite, Texture, Text, TextStyle } from "pixi.js";
 
 export class Balance {

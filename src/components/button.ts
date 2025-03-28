@@ -1,4 +1,3 @@
-// Button.ts
 import {
     Application,
     Sprite,

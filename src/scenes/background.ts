@@ -1,5 +1,3 @@
-//background.ts
-
 import { Application, Assets, Container, Sprite, TilingSprite, Texture } from 'pixi.js';
 import { AssetLoader } from '../utils/assetLoader';
 

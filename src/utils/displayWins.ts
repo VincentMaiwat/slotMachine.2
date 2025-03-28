@@ -1,4 +1,3 @@
-// displayWins.ts
 import { Container, Sprite, Text, Graphics, Texture, TextStyle } from 'pixi.js';
 import { Application } from 'pixi.js';
 import { gsap } from 'gsap';

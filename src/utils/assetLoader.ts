@@ -1,5 +1,3 @@
-//assetloader.ts
-
 import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 
 export class AssetLoader {
