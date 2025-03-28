@@ -20,7 +20,7 @@ export class Button {
     private width: number = 100;
     private height: number = 60;
     private xPosition: number = 0;
-    private yPosition: number = 780;
+    private yPosition: number = 800;
     private isInteractive: boolean = true;
     private isPulsing: boolean = true;
 
@@ -39,7 +39,7 @@ export class Button {
 
             // Offset from
             const offsetX = 0;
-            const offsetY = 350;
+            const offsetY = 370;
 
             const centerX = window.innerWidth/2;
             const centerY = window.innerHeight/2;

@@ -1,138 +1,227 @@
-import { Container, Sprite, Text, Graphics, Texture } from 'pixi.js';
+// displayWins.ts
+import { Container, Sprite, Text, Graphics, Texture, TextStyle } from 'pixi.js';
 import { Application } from 'pixi.js';
 import { gsap } from 'gsap';
-
-export interface WinResult {
-    isWin: boolean;
-    winningSymbols: string;
-    winAmount: number;
-    winningPayline: string;
-    winningCoordinates: number[][];
-}
+import { WinResult } from '../components/reels';
 
 export class WinDisplay {
-    private container: Container;
+    private creditsContainer: Container;
     private textContainer: Container;
     private symbolContainer: Container;
-    private background: Graphics;
     private winText: Text;
-    private symbolSprite?: Sprite;
+    private symbolSprites: Sprite[] = [];
     private paylineText: Text;
+    private symbolText: Text;
+    private currentTextShowing?: 'win' | 'payline' | 'symbol';
+    private textSwitchTimeline?: gsap.core.Timeline;
 
     constructor(app: Application) {
-        // Create the main container for the win display
-        this.container = new Container();
-        this.container.visible = false;
-        app.stage.addChild(this.container);
+        window.addEventListener('resize', this.handleResize.bind(this));
+        this.creditsContainer = new Container();
+        this.creditsContainer.visible = false;
+        app.stage.addChild(this.creditsContainer);
 
-        // Create a background for the win display
-        this.background = new Graphics();
-        this.container.addChild(this.background);
-
-        // Create containers for text and symbols
         this.textContainer = new Container();
         this.symbolContainer = new Container();
-        this.container.addChild(this.textContainer);
-        this.container.addChild(this.symbolContainer);
+        this.creditsContainer.addChild(this.textContainer);
 
-        // Create text elements
+
+        const textStyle = new TextStyle({
+            dropShadow: true,
+            fill: "#fec702",
+            fontFamily: "arial",
+            fontWeight: 'bold',
+            letterSpacing: 2,
+            fontSize: 23,
+            stroke: {color: "#154c79", width:3},
+        });
+
         this.winText = new Text({
             text: '',
-            style: {
-                fontFamily: 'Arial',
-                fontSize: 36,
-                fill: 0xFFD700, // Gold color
-                align: 'center'
-            }
+            style: textStyle
         });
         this.paylineText = new Text({
             text: '',
-            style: {
-                fontFamily: 'Arial',
-                fontSize: 24,
-                fill: 0xFFFFFF,
-                align: 'center'
-            }
+            style: textStyle
+        });
+        this.symbolText = new Text({
+            text: '',
+            style: textStyle
         });
 
         this.textContainer.addChild(this.winText);
         this.textContainer.addChild(this.paylineText);
+        this.textContainer.addChild(this.symbolText, this.symbolContainer);
+
+        this.paylineText.alpha = 0;
+        this.symbolText.alpha = 0;
+        this.symbolContainer.alpha = 0;
     }
 
     displayWin(winResult: WinResult, textureMap: Map<string, Texture>) {
-        // Clear previous display
-        if (this.symbolSprite) {
-            this.symbolContainer.removeChild(this.symbolSprite);
-            this.symbolSprite.destroy();
+        this.handleResize();
+
+        // Stop existing timeline
+        if (this.textSwitchTimeline) {
+            this.textSwitchTimeline.kill();
+            this.textSwitchTimeline = undefined;
         }
 
-        // Setup background
-        this.background.clear();
-        this.background.rect(0, 0, 600, 300);
-        this.background.fill(0x000000, 0.7);
-        this.background.stroke(0xFFFFFF, 0);
+        // Clear previous symbol containers and sprites
+        this.symbolContainer.removeChildren();
+        this.symbolSprites = [];
 
-        // Position the background
-        this.background.x = (window.innerWidth - 600) / 2;
-        this.background.y = (window.innerHeight - 300) / 2;
+        // Split winning symbols
+        const winningSymbols = winResult.winningSymbols.split(' and ');
+
+        // Create a container for symbols
+        const symbolDisplayContainer = new Container();
+
+        // Create sprite for each winning symbol
+        winningSymbols.forEach((symbolCode, index) => {
+            const texture = textureMap.get(symbolCode.trim());
+            if (texture) {
+                const symbolSprite = new Sprite(texture);
+                symbolSprite.anchor.set(0.5);
+
+                // Scale the sprite to fit within a reasonable size
+                const maxSize = 50;
+                const scale = Math.min(
+                    maxSize / texture.width,
+                    maxSize / texture.height
+                );
+                symbolSprite.scale.set(scale);
+
+                // Position sprites next to each other
+                symbolSprite.x = index * 60;
+                symbolDisplayContainer.addChild(symbolSprite);
+
+                this.symbolSprites.push(symbolSprite);
+            }
+        });
+
+        // Add symbol display container to symbol container
+        this.symbolContainer.addChild(symbolDisplayContainer);
+        this.symbolContainer.alpha = 0;
+        this.symbolContainer.x = 150;
 
         // Set win text
+        this.winText.anchor.set(0.5);
         this.winText.text = `YOU WON ${winResult.winAmount} CREDITS!`;
-        this.winText.x = (600 - this.winText.width) / 2;
-        this.winText.y = 50;
+        this.winText.alpha = 1;
 
         // Set payline text
-        this.paylineText.text = `Winning Symbols: ${winResult.winningSymbols}\nPayline(s): ${winResult.winningPayline}`;
-        this.paylineText.x = (600 - this.paylineText.width) / 2;
-        this.paylineText.y = 150;
+        this.paylineText.anchor.set(0.5);
+        this.paylineText.text = `Payline(s): ${winResult.winningPayline}`;
+        this.paylineText.alpha = 0;
 
-        // Create symbol sprite (using the first winning symbol)
-        const symbolCode = winResult.winningSymbols.split(' & ')[0];
-        const symbolTexture = textureMap.get(symbolCode);
-        
-        if (symbolTexture) {
-            this.symbolSprite = Sprite.from(symbolTexture);
-            
-            // Scale the symbol to fit
-            const maxSize = 150;
-            const scale = Math.min(
-                maxSize / this.symbolSprite.width,
-                maxSize / this.symbolSprite.height
-            );
-            this.symbolSprite.scale.set(scale);
-            
-            // Position the symbol
-            this.symbolSprite.x = (600 - this.symbolSprite.width) / 2;
-            this.symbolSprite.y = 200;
-            
-            this.symbolContainer.addChild(this.symbolSprite);
-        }
-
-        // Position the text and symbol containers relative to the background
-        this.textContainer.x = this.background.x;
-        this.textContainer.y = this.background.y;
-        this.symbolContainer.x = this.background.x;
-        this.symbolContainer.y = this.background.y;
+        // Set symbol text
+        this.symbolText.anchor.set(0.5);
+        this.symbolText.text = ' Winning Symbol(s): ';
+        this.symbolText.alpha = 0;
 
         // Show and animate the display
-        this.container.visible = true;
-        this.container.alpha = 0;
+        this.creditsContainer.visible = true;
+        this.creditsContainer.alpha = 0;
 
-        gsap.to(this.container, {
+        gsap.to(this.creditsContainer, {
             alpha: 1,
             duration: 0.5,
             ease: 'power2.out'
         });
+
+        this.setupTextSwitching();
+    }
+
+    // Rest of the methods remain the same as in the previous implementation
+    private setupTextSwitching() {
+        // Ensure any existing timeline is killed first
+        if (this.textSwitchTimeline) {
+            this.textSwitchTimeline.kill();
+        }
+
+        // Create a new timeline for text switching
+        this.textSwitchTimeline = gsap.timeline({
+            repeat: -1,
+            repeatDelay: 1
+        });
+
+        this.textSwitchTimeline
+        .to(this.winText, {
+            alpha: 0,
+            duration: 0.5,
+            delay: 1,
+        })
+        .to(this.winText, {
+            alpha: 0,
+            duration: 0.5,
+            onComplete: () => {
+                this.currentTextShowing = 'payline';
+            }
+        })
+        .to(this.paylineText, {
+            alpha: 1,
+            duration: 0.5
+        })
+        .to(this.paylineText, {
+            alpha: 0,
+            duration: 0.5,
+            delay: 2,
+            onComplete: () => {
+                this.currentTextShowing = 'symbol';
+            }
+        })
+        .to([this.symbolText, this.symbolContainer], {
+            alpha: 1,
+            duration: 0.5
+        })
+        .to([this.symbolText, this.symbolContainer], {
+            alpha: 0,
+            duration: 0.5,
+            delay: 2,
+            onComplete: () => {
+                this.currentTextShowing = 'win';
+            }
+        })
+        .to(this.winText, {
+            alpha: 1,
+            duration: 0.5
+        });
     }
 
     hideWin() {
-        gsap.to(this.container, {
+        // Kill the timeline if it exists
+        if (this.textSwitchTimeline) {
+            this.textSwitchTimeline.kill();
+            this.textSwitchTimeline = undefined;
+        }
+
+        // Reset text states
+        this.winText.alpha = 0;
+        this.paylineText.alpha = 0;
+        this.symbolText.alpha = 0;
+
+        gsap.to(this.creditsContainer, {
             alpha: 0,
             duration: 0.5,
             ease: 'power2.in',
             onComplete: () => {
-                this.container.visible = false;
+                this.creditsContainer.visible = false;
             }
         });
+    }
+
+    public handleResize(): void {
+        if (this.creditsContainer) {
+            const scaleAmount = Math.min(window.innerWidth / 1920, window.innerHeight / 920);
+            this.creditsContainer.scale.set(scaleAmount);
+            const offsetX = 0;
+            const offsetY = 300;
+            // Position at the bottom of the screen
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight /2 ;
+            this.creditsContainer.x = centerX + (offsetX * scaleAmount);
+            this.creditsContainer.y = centerY + (offsetY * scaleAmount);
+        }
     }
 }

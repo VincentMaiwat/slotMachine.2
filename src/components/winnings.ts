@@ -4,11 +4,9 @@ import { Reels } from "./reels";
 
 export class Winnings {
     private app: Application;
-    private sprWins?: Sprite;
-    private textureWins?: Texture;
     private txtWins: Text;
+    private txtLabel: Text;
     private containerWins: Container;
-    private plus: string = 'assets/images/plus.png';
     private rectWins = new Graphics();
     private reels = Reels;
 
@@ -18,9 +16,17 @@ export class Winnings {
     constructor (app: Application){
         this.app = app;
 
-        const textStyle = new TextStyle({
+        const textStyleLabel = new TextStyle({
             dropShadow: true,
-            fill: "#fec702",
+            fill: "#56ff74",
+            fontFamily: "pokemon",
+            letterSpacing: 5,
+            fontSize:23,
+        });
+
+        const textStyleWins = new TextStyle({
+            dropShadow: true,
+            fill: "#ffffff",
             fontFamily: "pokemon",
             letterSpacing: 5,
             fontSize:23,
@@ -34,12 +40,12 @@ export class Winnings {
 
         this.txtWins = new Text({
             text: this.winnings.value.toString(),
-            style: textStyle
+            style: textStyleWins
         });
-
-        // window.addEventListener('load', function(){
-
-        // });
+        this.txtLabel = new Text({
+            text: "Win: " ,
+            style: textStyleLabel
+        });
 
         window.addEventListener('resize', this.handleResize.bind(this));
 
@@ -67,23 +73,19 @@ export class Winnings {
     async initialize(): Promise<void>{
         try{
 
-            this.textureWins = await Assets.load(this.plus);
-            this.sprWins = Sprite.from(this.textureWins);
-
             this.applySettings();
-            this.containerWins.addChild(this.rectWins,this.sprWins,this.txtWins);
+            this.containerWins.addChild(this.rectWins,this.txtLabel,this.txtWins);
             this.handleResize();
 
             return Promise.resolve();
         }catch (error){
-            console.error("Failed to load pokeball", error);
             return Promise.reject(error);
         }
     }
 
     private applySettings(): void {
         // Winnings component
-        if(!this.sprWins) return;
+        if(!this.rectWins) return;
         this.rectWins.roundRect(0,0,280,70,30);
         this.rectWins.fill({color:'#870303'});
         this.rectWins.stroke({width: 2, color:0x56ff74});
@@ -92,9 +94,9 @@ export class Winnings {
         this.txtWins.x = 150;
         this.txtWins.y = this.rectWins.height/2;
 
-        this.sprWins.setSize(25,25);
-        this.sprWins.x =((this.rectWins.width - this.txtWins.width)/2.5);
-        this.sprWins.y = 20 ;
+        this.txtLabel.anchor.set(0.5);
+        this.txtLabel.x =((this.rectWins.width - this.txtLabel.width) - this.txtWins.width)/2;
+        this.txtLabel.y = this.rectWins.height/2 ;
 
         this.containerWins.position.set(140,280);
     }

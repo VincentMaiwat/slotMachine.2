@@ -40,9 +40,9 @@ export class Reels {
     private isRunning: boolean = false;
     private mask?: Graphics;
     // private winningSymbolAnimations: gsap.core.Tween[] = [];
-    private winningSymbolAnimations: { 
-        symbol: Sprite, 
-        animation: gsap.core.Tween 
+    private winningSymbolAnimations: {
+        symbol: Sprite,
+        animation: gsap.core.Tween
     }[] = [];
 
     // Predefined symbol sequences for each reel
@@ -554,17 +554,17 @@ export class Reels {
         }
 
         // Combine winning symbols
-        const combinedSymbols = wins.map(win => win.winningSymbols).join(" & ");
+        const combinedSymbols = wins.map(win => win.winningSymbols).join(" and ");
 
         // Sum up total win amount
         const totalWinAmount = wins.reduce((sum, win) => sum + win.winAmount, 0);
 
         // Combine paylines
-        const combinedPaylines = wins.map(win => win.winningPayline).join(" & ");
+        const combinedPaylines = ("Lines " + (wins.map(win => win.winningPayline).join(" and ")));
 
         // Combine winning coordinates
-        const combinedCoordinates = wins.flatMap(win => win.winningCoordinates);
-
+        const combinedCoordinates = wins.reduce((acc: number[][], win: WinResult) =>
+            acc.concat(win.winningCoordinates), [] as number[][]);
         return {
             isWin: true,
             winningSymbols: combinedSymbols,
@@ -592,7 +592,7 @@ export class Reels {
             if (winningSymbol) {
                 const animation = this.pulseSymbol(winningSymbol);
                 this.winningSymbolAnimations.push({symbol: winningSymbol, animation});
-                
+
             }
         });
     }

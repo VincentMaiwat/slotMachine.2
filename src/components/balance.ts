@@ -7,6 +7,7 @@ export class Balance {
     private sprBall?: Sprite;
     private textureBall?: Texture;
     private txtCoins: Text;
+    private txtLabel: Text;
     private containerCoins: Container;
     private pokeball: string = 'assets/images/pokeball.png';
     private rectCoins = new Graphics();
@@ -21,16 +22,28 @@ export class Balance {
         this.containerCoins = new Container();
         this.app.stage.addChild(this.containerCoins);
 
-        const textStyle = new TextStyle({
+        const textStyleLabel = new TextStyle({
             dropShadow: true,
             fill: "#fec702",
             fontFamily: "pokemon",
             letterSpacing: 5,
-            fontSize:23,
+            fontSize:20,
+        });
+
+        const txtStyleBalance = new TextStyle({
+            dropShadow: true,
+            fill: "#ffffff",
+            fontFamily: "pokemon",
+            letterSpacing: 5,
+            fontSize:20,
+        });
+        this.txtLabel = new Text({
+            text: "Credits: ",
+            style: textStyleLabel
         });
         this.txtCoins = new Text({
             text: this.balance.value.toString(),
-            style: textStyle
+            style: txtStyleBalance
         });
 
         window.addEventListener('resize', this.handleResize.bind(this));
@@ -61,6 +74,7 @@ export class Balance {
     public getBalance(): number {
         return this.balance.value;
     }
+
     static async create(app: Application): Promise<Balance>{
         const balance = new Balance(app);
         await balance.initialize();
@@ -73,7 +87,7 @@ export class Balance {
             this.sprBall = Sprite.from(this.textureBall);
 
             this.applySettings();
-            this.containerCoins.addChild(this.rectCoins,this.sprBall,this.txtCoins);
+            this.containerCoins.addChild(this.rectCoins,this.txtLabel,this.txtCoins);
             this.handleResize();
 
             return Promise.resolve();
@@ -85,18 +99,18 @@ export class Balance {
 
     private applySettings(): void {
         // Balance Component
-        if(!this.sprBall) return;
+        if(!this.rectCoins) return;
         this.rectCoins.roundRect(0,0,280,70,30);
         this.rectCoins.fill({color:'#870303'});
         this.rectCoins.stroke({width: 2, color:0xFFCB00});
 
         this.txtCoins.anchor.set(0.5);
-        this.txtCoins.x = 150;
+        this.txtCoins.x = 200;
         this.txtCoins.y = this.rectCoins.height/2;
 
-        this.sprBall.setSize(30,30);
-        this.sprBall.x = 80;
-        this.sprBall.y = ((this.rectCoins.width - this.txtCoins.width)/12) ;
+        this.txtLabel.anchor.set(0.5);
+        this.txtLabel.x =100;
+        this.txtLabel.y = this.rectCoins.height/2 ;
 
         this.containerCoins.position.set(1490,280);
     }
